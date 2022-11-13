@@ -1,12 +1,13 @@
-from django.conf import settings
+from rest import settings
 
-DB_READWRITE_APPS = getattr(settings, "DB_READWRITE_APPS", [])
-DB_ROUTING_READ = getattr(settings, "DB_ROUTING_READ", {})
-DB_ROUTING_WRITE = getattr(settings, "DB_ROUTING_WRITE", {})
-DB_ROUTING_RELATIONS = getattr(settings, "DB_ROUTING_RELATIONS", [('default', 'readonly')])
-DB_ROUTING_MIGRATIONS = getattr(settings, "DB_ROUTING_MIGRATIONS", {})
-DB_ROUTING_MAPS = getattr(settings, "DB_ROUTING_MAPS", None)
-DB_ROUTING_READ_DEFAULT = getattr(settings, "DB_ROUTING_READ_DEFAULT", "readonly")
+
+DB_READWRITE_APPS = settings.get("DB_READWRITE_APPS", [])
+DB_ROUTING_READ = settings.get("DB_ROUTING_READ", {})
+DB_ROUTING_WRITE = settings.get("DB_ROUTING_WRITE", {})
+DB_ROUTING_RELATIONS = settings.get("DB_ROUTING_RELATIONS", [('default', 'readonly')])
+DB_ROUTING_MIGRATIONS = settings.get("DB_ROUTING_MIGRATIONS", {})
+DB_ROUTING_MAPS = settings.get("DB_ROUTING_MAPS")
+DB_ROUTING_READ_DEFAULT = settings.get("DB_ROUTING_READ_DEFAULT", "readonly")
 
 
 class SimpleRouter:
@@ -14,7 +15,7 @@ class SimpleRouter:
     A router that can be easily configured to route what database particular apps utilize
     """
     def getMappedDB(self, name):
-        if name in DB_ROUTING_MAPS:
+        if DB_ROUTING_MAPS is not None and name in DB_ROUTING_MAPS:
             return DB_ROUTING_MAPS[name]
         return name
 
