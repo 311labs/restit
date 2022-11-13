@@ -1,0 +1,62 @@
+{% extends "medialib/base.html" %}
+{% block head %}
+<style type="text/css">
+#main {
+	width: 100%;
+}
+#content {
+	left: 10px;
+}
+table {
+	border-collapse: collapse;
+}
+td,
+th {
+	border: 1px dashed #808080;
+	border-left: 1px solid #303030;
+	border-right: 1px solid #303030;
+}
+th {
+	border-top: 2px solid #303030;
+	background-color: #ffff80;
+}
+tr.instance td {
+	text-align: center;
+}
+td.filler {
+	border-right: none;
+}
+td.message {
+	border-left: none;
+	white-space: pre-wrap;
+}
+</style>
+{% endblock %}
+{%block main %}
+<h2>{{ title }}</h2>
+<table class="instances">
+{% for i in instances %}
+<tr>
+	<th>instance</th>
+	<th>state</th>
+	<th>priority</th>
+	<th>started</th>
+	<th>last</th>
+	<th>shutdown</th>
+</tr>
+<tr class="instance" id="instance_{{ i.id }}">
+	<td class="instance_id">{{ i.id }} / {{ i.instance_id }}</td>
+	<td class="state">{{ i.get_state_display }}
+	{% if i.state == "R" %}#{{ i.rendering.id }}{% endif %}
+	</td>
+	<td class="priority">{{ i.priority }}</td>
+	<td class="started">{{ i.started }}</td>
+	<td class="last">{{ i.last_checkin }}</td>
+	<td class="shutdown">{{ i.shutdown }}</td>
+</tr><tr class="instance_msg" id="instance_{{ i.id }}_msg">
+	<td class="filler" ></td>
+	<td colspan="5" class="message">{{ i.message }}</td>
+</tr>
+{% endfor %}
+</table>
+{%endblock %}

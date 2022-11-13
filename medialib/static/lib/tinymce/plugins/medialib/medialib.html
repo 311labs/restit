@@ -1,0 +1,142 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>Media Library Selection</title>
+	<script type="text/javascript" src="../../tiny_mce_popup.js"></script>
+	<script type="text/javascript" src="js/dialog.js"></script>
+	<script type="text/javascript" src="../../../jquery.min.js"></script>
+	<script type="text/javascript" src="../../../../js/all.js"></script>
+<style type="text/css">
+html, body {
+	background:	#ffffff;
+	padding:	0px;
+	margin:		0px;
+}
+#search_bar {
+	position:	fixed;
+	top:		0px;
+	left:		0px;
+	right:		0px;
+	height:		35px;
+	background:	#a0a0a0;
+	color:		#000000;
+	padding:	5px;
+	z-index:	1;
+}
+#search_bar label {
+	display:	inline-block;
+	width:		70px;
+}
+#search_bar #search_input {
+	width:		550px;
+}
+#search_result {
+	margin-top:	3px;
+	text-align:	center;
+	color:		#202080;
+}
+#search_bar #cancel_btn {
+	position:	absolute;
+	display:	block;
+	height:		20px;
+	width:		20px;
+	top:	 	5px;
+	right:		10px;
+	background:	url("../../themes/advanced/img/icons.gif") no-repeat scroll 20px 20px transparent;
+	background-position:	-460px -20px
+}
+#content {
+	padding-top:	45px;
+}
+.mediaitem {
+	position:	relative;
+	display:	inline-block;
+	width:		140px;
+	height:		150px;
+	border:		1px solid #A6AEB5;
+	background:	#e0e0e0;
+	margin:		5px;
+	padding:	5px;
+	cursor:		pointer;cursor:hand;
+}
+.mediaitem:hover {
+	background:	#c0c0c0;
+}
+.mediaitem div.imgholder {
+	width:		140px;
+	height:		130px;
+	overflow:	hidden;
+}
+.mediaitem div.imgholder img.thumb {
+	width:		140px;
+	max-height:	130px;
+}
+.mediaitem:hover div.imgholder img.thumb {
+	max-height:	80px;
+}
+.mediaitem div.imgholder div.details {
+	display:	none;
+}
+.mediaitem:hover div.imgholder div.details {
+	display:	block;
+	font-size:	9px;
+}
+.mediaitem div.imgholder div.details span.label {
+	font-weight:	bold;
+	display:	inline-block;
+	min-width:	50px;
+}
+.mediaitem div.imgholder div.details span.data {
+}
+.mediaitem div.descr {
+	position:	absolute;
+	display:	block;
+	bottom:		0px;
+	left:		0px;
+	right:		0px;
+	text-align:	center;
+	text-shadow:	-2px 0px #e0e0e0, 2px 0px #e0e0e0, 0px -2px #e0e0e0, 0px 2px #e0e0e0;
+}
+.mediaitem:hover div.descr {
+	text-shadow:	-2px 0px #c0c0c0, 2px 0px #c0c0c0, 0px -2px #c0c0c0, 0px 2px #c0c0c0;
+}
+.mediaitem img.typeicon {
+	position:	absolute;
+	width:		16px;
+	height:		16px;
+	right:		8px;
+	top:		118px;
+}
+#status_loading {
+	position:	fixed;
+	right:		0px;
+	bottom:		0px;
+	padding:	3px;
+	background:	#303030;
+	color:		#ffffff;
+	display:	none;
+}
+</style>
+</head>
+<body>
+<div id="search_bar"><form id="search_form" action="#">
+	<label for="search_input">Search:</label> <input id="search_input" type="text" name="q"/>
+	<div id="search_result">Loading...</div>
+	<a id="cancel_btn" href="#" onclick="tinyMCEPopup.close();"><span></span><span style="display: none">Cancel</span></a>
+</form></div>
+<div id="content">
+</div>
+<div id="status_loading">Loading...</div>
+<!-- <form onsubmit="MediaLibDialog.insert();return false;" action="#">
+	<p>Here is a example dialog.</p>
+	<p>Selected text: <input id="someval" name="someval" type="text" class="text" /></p>
+	<p>Custom arg: <input id="somearg" name="somearg" type="text" class="text" /></p>
+
+	<div class="mceActionPanel">
+		<input type="button" id="insert" name="insert" value="{#insert}" onclick="MediaLibDialog.insert();" />
+		<input type="button" id="cancel" name="cancel" value="{#cancel}" onclick="tinyMCEPopup.close();" />
+	</div>
+</form>
+--!>
+</body>
+</html>

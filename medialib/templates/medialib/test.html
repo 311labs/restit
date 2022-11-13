@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+
+
+{% block page %}
+
+<script type="text/javascript" charset="utf-8">
+$(document).ready(function() {
+	
+	var progress_bar = new TWIN.Progressbar($("#progressbar"), {});
+	
+	var testProgress = function(evt) {
+		progress_bar.setValue(progress_bar.value+0.001);
+		setTimeout(function(evt){ testProgress() }, 100);
+	}
+	progress_bar.setValue(0.5);
+	
+	var slider_onSlide = function(value) {
+		$("#slider_value").text(value.toFixed(0) + " drunk monkeys");
+	}
+	
+	var slider = new TWIN.Slider($("#slider"), {total:20, onSlide:slider_onSlide});
+	
+	var vslider_onSlide = function(value) {
+		$("#vslider_value").text(value.toFixed(0) + " sleepy monkeys");
+	}
+	
+	
+	var vslider = new TWIN.Slider($("#vslider"), {vertical:true, total:100, onSlideComplete:vslider_onSlide});
+	//testProgress();
+	
+	var ratings = new TWIN.RatingBar($("#ratings"), {bars:10, value:2, onChange:function(value){ TWIN.debug("ratings: "+value)}});
+	
+});
+</script>
+
+
+<div id="progressbar"></div>
+<br />
+<div id="ratings">
+	
+</div>
+<br />
+<div id="slider_value">
+	
+</div>
+<div id="vslider_value">
+</div>
+<br />
+<div id="slider"></div>
+<br />
+<br />
+<br />
+<div id="vslider"></div>
+
+{% endblock %}

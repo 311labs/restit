@@ -1,0 +1,7 @@
+{{settings.SITE_LABEL}} medialib upload report
+	Site: {{ settings.SITE_LABEL }}
+	Item id: {{ item.id }}
+	Item name: {{ item.name }}
+	Duration: {{ item.duration }}
+	Size: {{ item.bytes }}
+	User: {{ item.owner.id }}: {{ item.owner.username }} ({{ item.owner.first_name }} {{ item.owner.last_name }})

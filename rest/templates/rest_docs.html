@@ -1,0 +1,346 @@
+{% load load_file %}<!doctype html>
+<html lang="en-US"><head>
+	<title>{% block title %}{% endblock %}</title>
+<!-- 	<meta name="viewport" content="initial-scale = 1.0,maximum-scale = 1.0" /> -->
+<meta name="viewport" content="width=device-width, user-scalable=no" />
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<link rel="shortcut icon"
+ href="{{STATIC_URL|default:"/static/"}}img/favicon.ico" />
+ <meta name="apple-mobile-web-app-capable" content="yes">
+
+	<script src="/static/lib/jquery.js"></script>
+	<script src="/static/lib/underscore.js"></script>
+	<script>window.STATIC_URL = "{{STATIC_URL|default:"/static/"}}";</script>
+
+	{% block head_includes %}{% endblock %}
+	<script>
+		$(document).ready(function(){
+
+			function showApi(api) {
+				console.log(api);
+				var $header = $("<h1><span>" + api.method + "</span>" + api.url +"</h1>");
+				var $graphs = $("<ul class='graphs'></ul>");
+				var $returns = $("<p class='returns'></p>").text(api.doc.returns);
+				var $issues = $("<p class='issues'></p>").text(api.doc.issues.replace(/\n/g, "<br />"));
+				var $summary = $("<pre></pre>").text(api.doc.summary.replace(/\n/g, "<br />"));
+				var $params = $("<dl></dl>");
+				var param_count = 0;
+				_.each(api.doc.params, function(par, key) {
+					param_count += 1
+					escaped = $("<div></div>").text(par).html()
+					var $dd = $("<dd></dd>").html(escaped.replace(/\n/g, "<br />"));
+					$params.append("<dt>" + key + "</dt>").append($dd);
+				});
+				$("#page").empty()
+					.append($header)
+					.append($summary);
+
+				if (param_count > 0) {
+					$("#page").append("<h2>Parameters</h2>")
+					.append($params);
+				}
+
+				if (api.doc.graphs.length > 0) {
+
+					_.each(api.doc.graphs, function(gr){
+						$graph_el = $("<li></li>").text(gr)
+							.appendTo($graphs)
+							.on("click", function(evt){
+								var graph_data = graphs[gr];
+								if (!_.isUndefined(graph_data)) {
+									var pretty = null;
+									try {
+										pretty = JSON.stringify(JSON.parse(graph_data), null, "\t");
+									} catch(e) {
+										console.error(e);
+										pretty = graph_data
+									}
+									var $graph = $("<pre class='graph'>" + pretty + "</pre>")
+										.css({"height":$(window).height()-180, "width":$(window).width()-620, "overflow-y":"scroll"});
+									$back = $("<h4>back to " + api.url + "</h4>");
+									$back.on("click", function(){
+										showApi(api);
+									});
+									$("#page").html($back)
+										.append("<h1>" + gr + "</h1>")
+										.append($graph);
+								}
+							});
+					});
+
+					$("#page").append("<h2 id='graph'>Graphs</h2>")
+						.append($graphs);
+				}
+
+				if (api.doc.issues.length > 2) {
+					$("#page").append("<h2 id='issues'>Issues</h2>")
+					.append($issues);
+				}
+
+				$("#page").append("<h2>Returns</h2>")
+					.append($returns);
+			}
+
+			var apis = {% autoescape off %}{{apis}}{% endautoescape %};
+
+			var graphs = {% autoescape off %}{{graphs}}{% endautoescape %};
+			window.graphs = graphs;
+
+			var $apimenu = $("#apimenu");
+			var modules = {};
+			_.each(apis, function(api){
+				if (true) {
+					var mod = api.module;
+					if (_.isUndefined(modules[mod])) {
+						modules[mod] = $("<ul></ul>");
+						$apimenu.append("<h3>" + mod + "</h3>");
+						$apimenu.append(modules[mod]);
+					}
+					var $menu = modules[mod];
+					var url = api.method + ":" + api.url;
+					var $apilink = $("<li><a href='#" + url + "'>"+ api.method + ": " + api.url +"</a>" + "</li>");
+					$menu.append($apilink);
+					var napi = api;
+					if (api.doc && api.doc.summary.length) {
+						$apilink.find("a").click(function(evt){
+							showApi(napi);
+						});
+					}
+
+
+					if (window.location.hash == "#"+url) {
+						showApi(api);
+					}
+				}
+
+			});
+
+
+
+		});
+	</script>
+	{% block head %}{% endblock %}
+
+	<style>
+		body {
+			background: #666666;
+			color: #3366ff;
+			margin: 0;
+			padding: 0;
+		}
+
+		header h1 {
+			margin: 0 0 10px 0;
+			padding: 0 10px 0 0;
+			z-index: 20;
+			color: #fff;
+		}
+
+		header {
+			width: 100%;
+			margin: 0;
+			background: rgba(0, 0, 0, 0.8);
+			box-shadow: 1px 1px 2px rgba(0,0,0, 0.3);
+		}
+
+		#sidebar {
+			float: left;
+			display: inline-block;
+			width: 300px;
+			background: #000000;
+			overflow: hidden;
+		}
+
+		#sidebar h4 {
+			background: #cccccc;
+			color: #000000;
+			margin: 0;
+		}
+
+		#apimenu {
+			padding-bottom: 20px;
+		}
+
+		#apimenu ul {
+			list-style: none;
+			list-style-image: none;
+			margin: 0;
+			padding: 0;
+			font-size: 8px;
+			font-weight: normal;
+
+		}
+
+		#apimenu h3 {
+			margin: 10px 4px 4px 4px;
+			color: #fff;
+		}
+
+		#page {
+			float: left;
+			display: inline-block;
+			position: fixed;
+			top: 45px;
+			left: 320px;
+			border-radius: 8px;
+			background: #fff;
+			min-width: 500px;
+			min-height: 200px;
+			padding: 20px;
+			font-size: 12px;
+		}
+
+		#page h1 {
+			margin: 0;
+			color: #003366;
+		}
+
+		#page h1 span {
+			margin: 0;
+			padding-right: 8px;
+			color: #006633;
+			font-style: italic;
+		}
+
+		#page h2 {
+			margin: 0;
+			color: #666666;
+			font-size: 14px;
+		}
+
+		#page h4 {
+			cursor: pointer;
+			font-family: Arial, Helvetica, sans-serif;
+			margin: 0;
+			color: #666666;
+			font-size: 14px;
+			text-align: right;
+		}
+
+
+		#page h4:hover {
+			color: #00cc00;
+		}
+
+		#page pre {
+			font-style: italic;
+			color: #666666;
+			white-space: pre-wrap;       /* css-3 */
+			white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+			white-space: -pre-wrap;      /* Opera 4-6 */
+			white-space: -o-pre-wrap;    /* Opera 7 */
+			word-wrap: break-word;       /* Internet Explorer 5.5+ */
+		}
+
+		#page ul.graphs {
+			list-style: none;
+			list-style-image: none;
+			margin-top: 2px;
+		}
+
+		#page ul.graphs li {
+			font-family: Arial, Helvetica, sans-serif;
+			display: inline-block;
+			padding: 3px;
+			color: #ffffff;
+			font-weight: bold;
+			cursor: pointer;
+			background: #009933;
+			border-radius: 4px;
+			font-size: 12px;
+			margin-right: 10px;
+		}
+
+		#page p.graphs:hover {
+			background: #669933;
+		}
+
+
+		#page p.issues {
+			font-family: Arial, Helvetica, sans-serif;
+			color: #cc0000;
+			font-size: 12px;
+		}
+
+		#page pre.graph {
+			font-style: normal;
+			color: #666666;
+			font-size: 10px;
+			overflow: hidden;
+		}
+
+		#page p {
+			font-style: italic;
+			color: #666666;
+			margin-top: 0;
+			margin-left: 10px;
+		}
+
+		#apimenu li a, #apimenu li a:active {
+			font-family: Arial, Helvetica, sans-serif;
+			font-size: 13px;
+			font-weight: normal;
+			color: #ff6600;
+			padding-left: 6px;
+
+		}
+
+		dl {
+		  padding: 0.5em;
+		}
+		dt {
+		  float: left;
+		  clear: left;
+		  width: 100px;
+		  text-align: right;
+		  font-weight: bold;
+		  color: green;
+		}
+		dt:after {
+		  content: ":";
+		}
+		dd {
+		  margin: 0 0 0 110px;
+		  padding: 0 0 0.5em 0;
+		  color: #330099;
+		  font-family: Arial, Helvetica, sans-serif;
+		}
+
+		#apimenu li {
+			padding-top: 4px;
+		}
+
+
+	</style>
+</head>
+
+<body>
+
+<header>
+	<div class="container-master">
+		<div class="brand">
+			<h1>
+			  REST-<span>API DOCS</span>
+			</h1>
+		</div>
+	</div>
+</header>
+
+<div id="main" class="container-master">
+	<div id="sidebar">
+		<h4>APIs</h4>
+		<div id="apimenu">
+
+		</div>
+	</div>
+
+	<div id="page">
+
+	</div>
+</div>
+
+<footer>
+
+</footer>
+
+</body></html>

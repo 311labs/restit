@@ -1,0 +1,286 @@
+#!/usr/bin/python
+
+import os
+import sys
+import pkgutil
+from optparse import OptionParser
+
+parser = OptionParser()
+parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False )
+parser.add_option("-p", "--purge-config", action="store_true", dest="purge", default=False )
+(__opts, args) = parser.parse_args()
+
+ROOT=os.path.dirname( os.path.dirname( os.path.dirname( os.path.realpath( __file__ ) ) ) )
+sys.path.append(ROOT)
+
+os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+
+import settings
+
+from medialib.models import *
+
+import medialib.render.presets
+from django.core.exceptions import ObjectDoesNotExist
+
+def ask(q, dflt=True):
+	if (dflt):
+		q = q + " [Y/n] "
+	else:
+		q = q + " [y/N] "
+
+	while True:
+		ans = raw_input(q).strip().upper()
+		if ans == "":
+			return dflt
+		elif ans == "Y":
+			return True
+		elif ans == "N":
+			return False
+
+def checkone(label, src, fields, p, cp, pkey, confirm):
+	changed = False
+	for chk in fields:
+		if type(chk) in (list, tuple):
+			srcchk = chk[1]
+			chk = chk[0]
+		else:
+			srcchk = chk
+		if hasattr(srcchk, '__call__'):
+			try:
+				val = srcchk(cp)
+			except KeyError:
+				continue
+		elif type(cp) != dict:
+			val = cp
+		elif srcchk in cp:
+			val = cp.get(srcchk)
+		else:
+			continue
+
+		noold = False
+		try:
+			if not type(getattr(p, chk)) == type(val) and getattr(p, chk) != None:
+				val = type(getattr(p, chk))(val)
+		except ObjectDoesNotExist:
+			noold = True
+			pass
+		if noold or getattr(p, chk) != val:
+			if confirm:
+				print "%s: %s: %s mismatch" % (label, pkey, chk)
+				print "\tDB : %s" % getattr(p, chk)
+				print "\tSRC: %s" % val
+			if (not confirm) or ask("Change?"):
+				setattr(p, chk, val)
+				changed = True
+	return changed
+
+def check(label, model, src, fields, dbidx, filter={}, key_trans=lambda x:x):
+	found = []
+	for p in model.objects.filter(**filter):
+		pkey=key_trans(getattr(p, dbidx))
+		if not pkey in src:
+			print "%s: %s: not in SRC" % (label, pkey)
+			if ask("Delete?", False):
+				p.delete()
+			continue
+		cp = src[pkey]
+		found.append(pkey)
+
+		if checkone(label, src, fields, p, cp, pkey, True):
+			p.save()
+		if type(cp) == dict:
+			cp['_obj'] = p
+
+	for name in src:
+		if name in found:
+			continue
+		cp = src[name]
+		p = model(**filter)
+		setattr(p, dbidx, key_trans(name))
+		if checkone(label, src, fields, p, cp, name, False):
+			try:
+				print "%s: %s: missing (%s)" % (label, name, cp[dbidx])
+			except (TypeError, KeyError):
+				print "%s: %s: missing (%s)" % (label, name, cp)
+			if ask("Add?"):
+				p.save()
+				if type(cp) == dict:
+					cp['_obj'] = p
+
+def check_mkey(label, model, fmodel, src, dbidx, key_trans=lambda x:x):
+	found = []
+	for p in model.all():
+		pkey=key_trans(getattr(p, dbidx))
+		if not pkey in src:
+			print "%s: %s: not in SRC" % (label, pkey)
+			if ask("Delete?", True):
+				model.remove(p)
+			continue
+		found.append(pkey)
+
+	for name in src:
+		if name in found:
+			continue
+		print "%s: %s: missing" % (label, name)
+		if ask("Add?"):
+			model.add(fmodel.objects.get(**{dbidx: name}))
+
+def key_trans_parameter(v):
+	if type(v) in (str, unicode):
+		return RenditionParameter.objects.get(name=v)
+	else:
+		return v.name
+
+def key_trans_preset(v):
+	return RenditionPreset.objects.get(short_name=v['preset'])
+
+#
+# read all configs
+#
+
+presets = {}
+presetavoids = []
+defs = {}
+defavoids = []
+defsets = {}
+
+try:
+	mast = __import__('medialib_presets', globals(), locals(), ['PresetConfig', 'DefinitionConfig'])
+except ImportError:
+	mast = object()
+
+if hasattr(mast, 'PresetConfig'):
+	if not type(mast.PresetConfig) in (list, tuple):
+		mast.PresetConfig = [mast.PresetConfig]
+	for c in mast.PresetConfig:
+		if 'avoid' in c:
+			presetavoids.append(c['avoid'])
+if hasattr(mast, 'DefinitionConfig'):
+	if not type(mast.DefinitionConfig) in (list, tuple):
+		mast.DefinitionConfig = [mast.DefinitionConfig]
+	for c in mast.DefinitionConfig:
+		if 'avoid' in c:
+			defavoids.append(c['avoid'])
+
+for preset in pkgutil.iter_modules(medialib.render.presets.__path__):
+	if preset[1] in presetavoids:
+		continue
+	try:
+		back = __import__('medialib.render.presets.' + preset[1], globals(), locals(), ['PresetConfig'])
+	except ImportError:
+		continue
+	if not hasattr(back, 'PresetConfig'):
+		continue
+
+	if not type(back.PresetConfig) in (list, tuple):
+		back.PresetConfig = [back.PresetConfig]
+
+	for c in back.PresetConfig:
+		if not 'short_name' in c:
+			c['short_name'] = preset[1]
+		if c['short_name'] in presetavoids:
+			continue
+		if not 'module_name' in c:
+			c['module_name'] = preset[1]
+		if c['short_name'] in presets:
+			print "CONFIG[%s]: %s: duplicate short name" % (preset[1], c['short_name'])
+		presets[c['short_name']] = c
+
+
+if hasattr(mast, 'PresetConfig'):
+	for c in mast.PresetConfig:
+		if 'avoid' in c:
+			pass
+		elif not 'short_name' in c:
+			print "CONFIG[master]: missing short name in global preset"
+		elif not 'module_name' in c:
+			print "CONFIG[master]: missing module name in global preset"
+		else:
+			if c['short_name'] in presets:
+				print "CONFIG[master]: %s: duplicate short name" % c['short_name']
+			presets[c['short_name']] = c
+
+for c,params in getattr(mast, 'PresetConfigParameters', {}).items():
+	for k,v in params.items():
+		try:
+			presets[c]['parameters'][k]['value'] = v
+		except KeyError:
+			print "CONFIG[master]: no such config parameter: %s/%s" % (c, k)
+
+
+if hasattr(mast, 'DefinitionConfig'):
+	for c in mast.DefinitionConfig:
+		if 'avoid' in c:
+			pass
+		elif not 'name' in c:
+			print "CONFIG[master]: missing name in global definition"
+		else:
+			if c['name'] in defs:
+				print "CONFIG[master]: %s: duplicate name" % c['name']
+			defs[c['name']] = c
+
+for c,params in getattr(mast, 'DefinitionConfigParameters', {}).items():
+	for k,v in params.items():
+		try:
+			presets[c]['parameters'][k]['value'] = v
+		except KeyError:
+			print "CONFIG[master]: no such config parameter: %s/%s" % (c, k)
+
+if hasattr(mast, 'DefaultRenditionSets'):
+	for k,v in mast.DefaultRenditionSets.items():
+		if not 'name' in v:
+			print "CONFIG[master]: missing name in global default sets"
+		else:
+			if v['name'] in defsets:
+				print "CONFIG[master]: %s: duplicate name" % v['name']
+			v['kind'] = k
+			defsets[k] = v
+
+#
+# extract valid parameters
+#
+
+parameters = {}
+for c in presets:
+	for p in presets[c]['parameters']:
+		if p in parameters:
+			for chk in ('description', 'required', 'kind', 'choices'):
+				if presets[c]['parameters'][p].get(chk, None) != parameters[p].get(chk, None):
+					print "CONFIG: %s (%s): mismatch" % (chk, ','.join([c]+parameters[p]['_from']))
+		else:
+			parameters[p] = presets[c]['parameters'][p].copy()
+			parameters[p]['_from'] = []
+
+		parameters[p]['_from'].append(c)
+
+
+#
+# check parameters against database
+#
+
+check("PARAMETER", RenditionParameter, parameters, ('description', 'required', 'kind', 'choices'), 'name')
+
+#
+# check presets against database
+#
+
+check("PRESET", RenditionPreset, presets, ('name', 'description', 'stage', 'default_use', 'applicable_kinds', 'module_name'), 'short_name')
+
+for c in presets.values():
+	if '_obj' in c:
+		check("PRESETCONFIG/%s" % c['short_name'], RenditionPresetParameterSetting, c['parameters'], (('setting','value'),), 'parameter', filter={'renditionPreset': c['_obj']}, key_trans=key_trans_parameter)
+
+#
+# check definitions against database
+#
+
+check("DEFINITION", RenditionDefinition, defs, ('name', 'description', ('preset',key_trans_preset), 'use', 'depend'), 'name')
+
+for c in defs.values():
+	if '_obj' in c:
+		check("DEFCONFIG/%s" % c['name'], RenditionDefinitionParameterSetting, c['parameters'], (('setting','value'),), 'parameter', filter={'renditionDefinition': c['_obj']}, key_trans=key_trans_parameter)
+
+check("DEFAULTSETS", RenditionSet, defsets, ('name', 'kind'), 'kind', filter={'default_set': True})
+for c in defsets.values():
+	if '_obj' in c:
+		check_mkey("DEFAULTSET/%s" % c['kind'], c['_obj'].renditions, RenditionDefinition, c['renditions'], 'name')

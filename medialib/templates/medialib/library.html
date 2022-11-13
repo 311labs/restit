@@ -1,0 +1,363 @@
+{% extends "medialib/base.html" %}
+{% block head %}
+<style type="text/css">
+#main {
+	width: 100%;
+}
+#content {
+	left: 10px;
+}
+
+table.medialib-items {
+	width: 100%;
+}
+
+
+table.medialib-renditions {
+	width: 240px;
+
+}
+
+table.medialib-items th, table.medialib-renditions th {
+	text-align: left;
+
+}
+
+table.medialib-renditions tbody {
+	overflow: auto;
+	overflow-x: hidden;
+	height: 100px;
+}
+
+table.medialib-items thead tr, table.medialib-renditions thead tr {
+	position:relative;
+	top: 0px;
+	color: white;
+	background: #999;
+	border-bottom: 1px solid black;
+}
+
+table.medialib-items tbody tr, table.medialib-renditions tbody tr {
+	color: #282828;
+	background: #FFF;
+	cursor: pointer;
+}
+
+
+table.medialib-items tbody tr.even, table.medialib-renditions tbody tr.even {
+	background: #E5E5E5;
+}
+
+table.medialib-items tbody tr.selected, table.medialib-renditions tbody tr.selected {
+	color: #3E493E;
+	background: #92AAD1;
+}
+
+table.medialib-items tbody tr:hover, table.medialib-renditions tbody tr:hover {
+	color: #282828;
+	background: #B4D2FF;
+	cursor: pointer;
+}
+
+div#submitvideo_progress_filename {
+	font-size: 12px;
+}
+
+div#submitvideo_progress_info  {
+	position: absolute;
+	top: 0;
+	left: 0;
+}
+
+form#submitvideo-form {
+	float: left;
+}
+
+.inlinefield {
+	float: left;
+	display: inline;
+}
+
+.customfile-feedback-populated, .customfile-feedback {
+	background: none;
+	color: #CC8F38;
+}
+
+#submitvideo_progress_info {
+	color: #CC8F38;
+}
+
+#submitvideo_progressbar {
+	position: absolute;
+	top: 0;
+	left: 300px;
+}
+
+#media-preview {
+	width: 100%;
+	height: 216px;
+	min-width: 900px;
+}
+
+#preview-player-box {
+	float: left;
+	background: #FAFAFA;
+	padding: 4px;
+	margin: 4px;
+	-moz-border-radius: 4px;
+	border-radius: 4px;
+}
+
+#preview-info {
+	float: left;
+	width: 240px;
+	height: 216px;
+	background: #FAFAFA;
+	margin: 4px;
+	-moz-border-radius: 4px;
+	border-radius: 4px;
+}
+
+#rendition-list {
+	background: #FAFAFA;
+	float: left;
+	margin: 4px;
+	padding: 4px;
+	-moz-border-radius: 4px;
+	border-radius: 4px;
+}
+
+#media-list {
+	position: relative;
+	clear: both;
+	background: #FAFAFA;
+	margin: 4px;
+	margin-top: 12px;
+	padding: 4px;
+	-moz-border-radius: 4px;
+	border-radius: 4px;
+}
+
+.media-preview-thumbnail {
+	max-height: 200px;
+}
+
+
+</style>
+<script src="{{STATIC_URL}}js/all_medialib_ui.js" type="text/javascript" charset="utf-8"></script>
+<script type="text/javascript" charset="utf-8">
+$(document).ready(function() {
+	window.library_id = {{library.id}};
+	var videoupload_progressbar = new TWIN.Progressbar($("#submitvideo_progressbar"));	
+	$("#submitvideo_progress_info").hide();
+	$("#videoupload").hide();
+	
+	function onSubmitVideo(evt) {
+		var f = this.file.files[0];
+		$(this).hide();
+		this.name.value = f.name;
+		
+		var megabytes = f.size / 1048576.0;
+		videoupload_progressbar.setValue(0.0);
+		$("#submitvideo_progress_filename").text(f.name+ '('+ f.type + ') ' + megabytes.toFixed(2) + 'MB');
+		$("#submitvideo_progress_info").show();
+		$("#loading").show();
+		return true;
+	}
+
+	function onSubmitVideoProgress(evt, completed, loaded, total) {
+		videoupload_progressbar.setValue(completed);
+		$("#submitvideo_progress_percent").text(" " + (completed * 100).toFixed(0) + "%");
+		if (completed >= 1) {
+			$("#submitvideo_progresstext").text("Processing, please wait...");
+		}
+	}
+
+	function onSubmitVideoComplete(evt, response) {
+		$("#loading_message").text("Upload complete.");
+		if (response.status) {
+			window.location ="/students/profile";
+		} else {
+			$(".student_content").hide();
+			$("#submitvideo").show();
+			if (response.errors) {
+				TWIN.REST.showErrors(response.errors, function(e) { TWIN.utils.showAlert("Error submitting video", e); });
+			} else {
+				TWIN.utils.showAlert("Error submitting video", response.error);
+			}
+		}
+	}
+	
+	function onValidateVideo(evt) {
+		var f = this.file.files[0];
+		$(this).hide();
+		this.name.value = f.name;
+		return true;
+	}
+	
+	$("#submitvideo-form").UploadForm({
+		validate: onValidateVideo,
+		start: onSubmitVideo,
+		complete: onSubmitVideoComplete,
+		progress: onSubmitVideoProgress,
+		required: ["file", "name"]
+	});
+	
+	$("#file").CustomFileInput();
+	$("#file").change(function(evt){
+		$("#videoupload").show();
+	});
+	
+	
+	$("#media-preview").hide();
+	$(".item").click(function(evt){
+		$("#media-preview").slideToggle();
+	});
+	
+	window.library_list = new TWIN.medialib.ui.MediaList($("#media-list"), {library:window.library_id}, {onItemSelect:function(item){
+		window.library_list.selected_item = item;
+		$("#media-preview").slideUp("fast", function(evt){
+			showMediaItem(item);
+		});
+	}});
+	
+	window.rendition_list = new TWIN.medialib.ui.RenditionList($("#rendition-list"), {}, {onRenditionSelect:function(rendition){
+		if ((rendition.use == 'image')||(rendition.use == "thumbnail")||(rendition.use == "still")||(rendition.use == "thumbnail-animated")) {
+			destroyPlayer();
+			var img = $(document.createElement("img"))
+				.addClass("media-preview-thumbnail")
+				.attr("src", rendition.url);
+			$("#preview-player").empty().append(img);
+			
+		} else if (rendition.use == "video") {
+			window.library_list.selected_item.rendition = rendition;
+			if (!window.preview_player) {
+				$("#preview-player").empty();
+				createPlayer(window.library_list.selected_item);
+			}
+			window.preview_player.setClip(window.library_list.selected_item);
+		}
+	}});	 
+
+	$("#account-select").change(function(evt){
+		
+		window.location = "/medialib/admin/library/"+$(this).val();
+	});
+
+});
+
+function destroyPlayer() {
+	if (window.preview_player) {
+		window.preview_player.destroy();
+		window.preview_player = null;		
+	}
+}
+
+function createPlayer(item) {
+	window.preview_player = new TWIN.Video.Player($("#preview-player"), 
+		{
+			width: 380,
+		});
+	preview_player.addComponent(new TWIN.Video.Controls(null, {
+		qualityBar: false, 
+	}));
+	preview_player.addComponent(new TWIN.Video.Poster(null, {}));
+	preview_player.setClip(item);
+}
+
+function showMediaItem(item) {
+	if (window.preview_player) {
+		destroyPlayer();
+	}
+	$("#preview-player").empty();
+
+	TWIN.medialib.getRenditions(item.id, {}, {onSuccess: function(data) {
+		var renditions = data.data;
+		item.renditions = [];
+		item.thumbs = [];
+		item.original = null;
+		for (var i=0; i < renditions.length; i++) {
+			if (renditions[i].use == "video") {
+				item.renditions.push(renditions[i]);
+			} else if (renditions[i].use == "thumbnail") {
+				item.thumbs.push(renditions[i]);
+				if (!item.thumbnail) {
+					item.thumbnail = renditions[i];
+				}
+			} else if (renditions[i].use == "thumbnail-animated") {
+				item.animated = renditions[i];
+			} else if (renditions[i].use == "original") {
+				item.original = renditions[i];
+			} else if (renditions[i].use == "still") {
+				item.poster_url = renditions[i].url;
+			}
+		};
+		
+		$("#preview_name").text(item.name);
+		window.rendition_list.clear();
+		for (var i=0; i < renditions.length; i++) {
+			window.rendition_list.addRendition(renditions[i]);
+		}
+		
+		if (item.kind == 'V') {
+			createPlayer(item);
+			$("#media-preview").slideDown();
+			// HACK: ians no idea why it is not resizing without this
+			window.preview_player.setSize(380);			
+		} else if (item.kind == "I") {
+			var img = $(document.createElement("img"))
+				.attr("src", item.thumbnail.url);
+			$("#preview-player").append(img);
+			$("#media-preview").slideDown();
+		}
+	}});
+	
+}
+
+</script>
+
+{% endblock %}
+{%block content %}
+<div id="media-preview">
+	<div id="preview-player-box">
+		<div id="preview-player">
+		</div>		
+	</div>
+	<div id="preview-info">
+		<h3 id="preview_name">
+			
+		</h3>
+		
+	</div>
+	<div id="rendition-list">
+
+	</div>
+</div>
+
+<div id="media-list">
+	
+</div>
+{% endblock %}
+
+{% block footer %}
+
+<form id="submitvideo-form" name="submitvideo-form" action="/medialib/library/{{library.id}}/new" enctype="multipart/form-data" method="post">
+	<div class="inlinefield">
+		<input type="file" name="file" id="file" />		
+	</div>
+	<div class="inlinefield">
+		<input type="submit" name="videoupload" value="upload" id="videoupload" />
+	</div>
+		<input type="hidden" name="name" value="" id="name" />
+</form>
+
+<div id="submitvideo_progress_info">
+	<div id="submitvideo_progress_filename">
+	</div>
+	<div id="submitvideo_progressbar">
+	</div>
+	<div id="submitvideo_progresstext">
+	</div>
+</div>
+
+{% endblock %}

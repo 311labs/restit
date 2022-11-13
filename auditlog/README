@@ -1,0 +1,25 @@
+REQUIREMENTS:
+  * Django
+  * TWIN sessionlog module
+
+SETUP:
+  * add to INSTALLED_APPS in settings.py:
+	'cms'
+
+  * disable audit logging when loading from fixtures
+  	add to manage.py:
+	 * AUDIT_DISABLED = False
+	   if "loaddata" in sys.argv:
+		AUDIT_DISABLED = True
+
+USAGE:
+  * from auditlog.decorators import *
+
+  * for each class to be audited, add as a decorator:
+	@auditclass()
+	
+	auditclass options:
+		fields=list
+		exclude=list
+		  - fields in the model to trigger audit logging.  Defaults to include all fields.
+

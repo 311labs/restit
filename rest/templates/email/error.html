@@ -1,0 +1,34 @@
+<h2>Server: {{server}}</h2>
+<h2>{{method}} {{path}}</h2>
+<h3>{{error}}</h3>
+<hr>
+<pre>{{stack}}</pre>
+<hr>
+<h3>Body</h3>
+<pre>
+	{{body}}
+</pre>
+<h3>User</h3>
+<pre>
+	{{user}}
+</pre>
+
+<h3>Parameters</h3>
+<table>
+<tr>
+	<th>Parameter</th><th>Value</th>
+</tr>
+{% for key, value in params.items %}
+	<tr><td>{{key}}</td><td>{{value}}</td></tr>
+{% endfor %}
+</table>
+
+<h3>Headers</h3>
+<table>
+<tr>
+	<th>HEADER</th><th>Value</th>
+</tr>
+{% for key, value in meta.items %}
+	<tr><td>{{key}}</td><td>{{value}}</td></tr>
+{% endfor %}
+</table>

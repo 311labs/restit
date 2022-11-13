@@ -1,0 +1,625 @@
+[
+    {
+        "pk": 1,
+        "model": "medialib.renditionparameter",
+        "fields": {
+            "choices": "",
+            "kind": "I",
+            "required": false,
+            "name": "audio_freq",
+            "description": "audio frequency"
+        }
+    }, {
+        "pk": 2,
+        "model": "medialib.renditionparameter",
+        "fields": {
+            "choices": "",
+            "kind": "I",
+            "required": false,
+            "name": "key_frame",
+            "description": ""
+        }
+    }, {
+        "pk": 3,
+        "model": "medialib.renditionparameter",
+        "fields": {
+            "choices": "",
+            "kind": "I",
+            "required": false,
+            "name": "height",
+            "description": "height"
+        }
+    }, {
+        "pk": 4,
+        "model": "medialib.renditionparameter",
+        "fields": {
+            "choices": "",
+            "kind": "I",
+            "required": false,
+            "name": "width",
+            "description": "force width"
+        }
+    }, {
+        "pk": 5,
+        "model": "medialib.renditionparameter",
+        "fields": {
+            "choices": "",
+            "kind": "I",
+            "required": false,
+            "name": "audio_bitrate",
+            "description": "audio bitrate (kbps)"
+        }
+    }, {
+        "pk": 6,
+        "model": "medialib.renditionparameter",
+        "fields": {
+            "choices": "",
+            "kind": "I",
+            "required": false,
+            "name": "video_bitrate",
+            "description": "video bitrate (kbps)"
+        }
+    }, {
+        "pk": 7,
+        "model": "medialib.renditionparameter",
+        "fields": {
+            "choices": "",
+            "kind": "I",
+            "required": false,
+            "name": "pass",
+            "description": "number of passes during encoding"
+        }
+    }, {
+        "pk": 8,
+        "model": "medialib.renditionparameter",
+        "fields": {
+            "choices": "",
+            "kind": "I",
+            "required": false,
+            "name": "duration",
+            "description": "max duration of video (secs)"
+        }
+    }, {
+        "pk": 9,
+        "model": "medialib.renditionparameter",
+        "fields": {
+            "choices": "",
+            "kind": "I",
+            "required": false,
+            "name": "frame_rate",
+            "description": "frame rate"
+        }
+    }, {
+        "pk": 10,
+        "model": "medialib.renditionparameter",
+        "fields": {
+            "choices": "",
+            "kind": "I",
+            "required": false,
+            "name": "quality",
+            "description": "image quality, 1-100"
+        }
+    }, {
+        "pk": 11,
+        "model": "medialib.renditionparameter",
+        "fields": {
+            "choices": "",
+            "kind": "I",
+            "required": false,
+            "name": "maxratio",
+            "description": "maximum height to width ratio"
+        }
+    }, {
+        "pk": 12,
+        "model": "medialib.renditionparameter",
+        "fields": {
+            "choices": "",
+            "kind": "I",
+            "required": false,
+            "name": "maxheight",
+            "description": "maximum height"
+        }
+    }, {
+        "pk": 13,
+        "model": "medialib.renditionparameter",
+        "fields": {
+            "choices": "",
+            "kind": "I",
+            "required": false,
+            "name": "maxwidth",
+            "description": "maximum width"
+        }
+    }, {
+        "pk": 14,
+        "model": "medialib.renditionparameter",
+        "fields": {
+            "choices": "gif,jpg,png",
+            "kind": "C",
+            "required": true,
+            "name": "image_container",
+            "description": "container file extension for image"
+        }
+    }, {
+        "pk": 15,
+        "model": "medialib.renditionparameter",
+        "fields": {
+            "choices": "",
+            "kind": "I",
+            "required": true,
+            "name": "frame",
+            "description": "frame number"
+        }
+    }, {
+        "pk": 1,
+        "model": "medialib.renditionpreset",
+        "fields": {
+            "configurable_parameters": [],
+            "stage": 1,
+            "name": "validate video",
+            "short_name": "video_validate",
+            "description": ""
+        }
+    }, {
+        "pk": 2,
+        "model": "medialib.renditionpreset",
+        "fields": {
+            "configurable_parameters": [12],
+            "stage": 190,
+            "name": "mpeg4 360p",
+            "short_name": "mp4_lq",
+            "description": "low quality mpeg4 x264/aac"
+        }
+    }, {
+        "pk": 3,
+        "model": "medialib.renditionpreset",
+        "fields": {
+            "configurable_parameters": [14],
+            "stage": 190,
+            "name": "mpeg4 480p",
+            "short_name": "mp4_mq",
+            "description": "medium quality mpeg4 x264/aac "
+        }
+    }, {
+        "pk": 4,
+        "model": "medialib.renditionpreset",
+        "fields": {
+            "configurable_parameters": [14],
+            "stage": 190,
+            "name": "mpeg4 720p",
+            "short_name": "mp4_hq",
+            "description": "high quality mpeg4 x264/aac "
+        }
+    }, {
+        "pk": 5,
+        "model": "medialib.renditionpreset",
+        "fields": {
+            "configurable_parameters": [8, 9, 11, 12, 13],
+            "stage": 101,
+            "name": "animated thumbnail",
+            "short_name": "animated_thumbnail",
+            "description": "make animated thumbnail from video"
+        }
+    }, {
+        "pk": 6,
+        "model": "medialib.renditionpreset",
+        "fields": {
+            "configurable_parameters": [14, 15],
+            "stage": 10,
+            "name": "video still",
+            "short_name": "video_still",
+            "description": "grab frame from video"
+        }
+    }, {
+        "pk": 7,
+        "model": "medialib.renditionpreset",
+        "fields": {
+            "configurable_parameters": [10, 11, 12, 13, 14],
+            "stage": 50,
+            "name": "image transcode",
+            "short_name": "image_transcode",
+            "description": "transcode image to alternate size/quality/container"
+        }
+    }, {
+        "pk": 8,
+        "model": "medialib.renditionpreset",
+        "fields": {
+            "configurable_parameters": [10, 11, 12, 13, 14],
+            "stage": 20,
+            "name": "thumbnail",
+            "short_name": "thumbnail",
+            "description": "transcode image to smaller thumbnail"
+        }
+    }, {
+        "pk": 1,
+        "model": "medialib.renditiondefinition",
+        "fields": {
+            "active": true,
+            "use": "validate",
+            "preset": 1,
+            "name": "validate video",
+            "description": "validate video"
+        }
+    }, {
+        "pk": 2,
+        "model": "medialib.renditiondefinition",
+        "fields": {
+            "active": true,
+            "use": "image",
+            "preset": 7,
+            "name": "small image",
+            "description": "256 x 256 image"
+        }
+    }, {
+        "pk": 3,
+        "model": "medialib.renditiondefinition",
+        "fields": {
+            "active": true,
+            "use": "image",
+            "preset": 7,
+            "name": "medium image",
+            "description": "medium image"
+        }
+    }, {
+        "pk": 4,
+        "model": "medialib.renditiondefinition",
+        "fields": {
+            "active": true,
+            "use": "image",
+            "preset": 7,
+            "name": "large image",
+            "description": "large image"
+        }
+    }, {
+        "pk": 5,
+        "model": "medialib.renditiondefinition",
+        "fields": {
+            "active": true,
+            "use": "thumbnail-animated",
+            "preset": 5,
+            "name": "animated thumbnail",
+            "description": "animated gif thumbnail"
+        }
+    }, {
+        "pk": 6,
+        "model": "medialib.renditiondefinition",
+        "fields": {
+            "active": true,
+            "use": "video",
+            "preset": 2,
+            "name": "360p",
+            "description": "low quality mp4"
+        }
+    }, {
+        "pk": 7,
+        "model": "medialib.renditiondefinition",
+        "fields": {
+            "active": true,
+            "use": "video",
+            "preset": 3,
+            "name": "480p",
+            "description": "medium quality mp4"
+        }
+    }, {
+        "pk": 8,
+        "model": "medialib.renditiondefinition",
+        "fields": {
+            "active": true,
+            "use": "video",
+            "preset": 4,
+            "name": "720p",
+            "description": "high quality mp4"
+        }
+    }, {
+        "pk": 9,
+        "model": "medialib.renditiondefinition",
+        "fields": {
+            "active": true,
+            "use": "still",
+            "preset": 6,
+            "name": "video still",
+            "description": "video still"
+        }
+    }, {
+        "pk": 10,
+        "model": "medialib.renditiondefinition",
+        "fields": {
+            "active": true,
+            "use": "tumbnail",
+            "preset": 8,
+            "name": "thumnbnail large",
+            "description": "thumbnail large"
+        }
+    }, {
+        "pk": 11,
+        "model": "medialib.renditiondefinition",
+        "fields": {
+            "active": true,
+            "use": "thumbnail",
+            "preset": 8,
+            "name": "thumnbnail small",
+            "description": "thumnbnail small"
+        }
+    }, {
+        "pk": 1,
+        "model": "medialib.renditionset",
+        "fields": {
+            "default_set": true,
+            "kind": "I",
+            "name": "Default Image Rendition",
+            "renditions": [2, 3, 4, 10, 11]
+        }
+    }, {
+        "pk": 2,
+        "model": "medialib.renditionset",
+        "fields": {
+            "default_set": true,
+            "kind": "V",
+            "name": "Default Video Rendition",
+            "renditions": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        }
+    }, {
+        "pk": 1,
+        "model": "medialib.renditionpresetparametersetting",
+        "fields": {
+            "renditionPreset": 8,
+            "setting": "jpg",
+            "parameter": 14
+        }
+    }, {
+        "pk": 2,
+        "model": "medialib.renditionpresetparametersetting",
+        "fields": {
+            "renditionPreset": 8,
+            "setting": "128",
+            "parameter": 13
+        }
+    }, {
+        "pk": 3,
+        "model": "medialib.renditionpresetparametersetting",
+        "fields": {
+            "renditionPreset": 8,
+            "setting": "128",
+            "parameter": 12
+        }
+    }, {
+        "pk": 4,
+        "model": "medialib.renditionpresetparametersetting",
+        "fields": {
+            "renditionPreset": 8,
+            "setting": "4",
+            "parameter": 11
+        }
+    }, {
+        "pk": 5,
+        "model": "medialib.renditionpresetparametersetting",
+        "fields": {
+            "renditionPreset": 8,
+            "setting": "25",
+            "parameter": 10
+        }
+    }, {
+        "pk": 6,
+        "model": "medialib.renditionpresetparametersetting",
+        "fields": {
+            "renditionPreset": 7,
+            "setting": "jpg",
+            "parameter": 14
+        }
+    }, {
+        "pk": 7,
+        "model": "medialib.renditionpresetparametersetting",
+        "fields": {
+            "renditionPreset": 7,
+            "setting": "512",
+            "parameter": 13
+        }
+    }, {
+        "pk": 8,
+        "model": "medialib.renditionpresetparametersetting",
+        "fields": {
+            "renditionPreset": 7,
+            "setting": "512",
+            "parameter": 12
+        }
+    }, {
+        "pk": 9,
+        "model": "medialib.renditionpresetparametersetting",
+        "fields": {
+            "renditionPreset": 7,
+            "setting": "75",
+            "parameter": 10
+        }
+    }, {
+        "pk": 10,
+        "model": "medialib.renditionpresetparametersetting",
+        "fields": {
+            "renditionPreset": 6,
+            "setting": "1",
+            "parameter": 15
+        }
+    }, {
+        "pk": 11,
+        "model": "medialib.renditionpresetparametersetting",
+        "fields": {
+            "renditionPreset": 6,
+            "setting": "jpg",
+            "parameter": 14
+        }
+    }, {
+        "pk": 12,
+        "model": "medialib.renditionpresetparametersetting",
+        "fields": {
+            "renditionPreset": 5,
+            "setting": "25",
+            "parameter": 9
+        }
+    }, {
+        "pk": 13,
+        "model": "medialib.renditionpresetparametersetting",
+        "fields": {
+            "renditionPreset": 5,
+            "setting": "5",
+            "parameter": 8
+        }
+    }, {
+        "pk": 14,
+        "model": "medialib.renditionpresetparametersetting",
+        "fields": {
+            "renditionPreset": 4,
+            "setting": "25",
+            "parameter": 9
+        }
+    }, {
+        "pk": 15,
+        "model": "medialib.renditionpresetparametersetting",
+        "fields": {
+            "renditionPreset": 4,
+            "setting": "2",
+            "parameter": 7
+        }
+    }, {
+        "pk": 16,
+        "model": "medialib.renditionpresetparametersetting",
+        "fields": {
+            "renditionPreset": 4,
+            "setting": "1200",
+            "parameter": 6
+        }
+    }, {
+        "pk": 17,
+        "model": "medialib.renditionpresetparametersetting",
+        "fields": {
+            "renditionPreset": 4,
+            "setting": "168",
+            "parameter": 5
+        }
+    }, {
+        "pk": 18,
+        "model": "medialib.renditionpresetparametersetting",
+        "fields": {
+            "renditionPreset": 4,
+            "setting": "720",
+            "parameter": 3
+        }
+    }, {
+        "pk": 19,
+        "model": "medialib.renditionpresetparametersetting",
+        "fields": {
+            "renditionPreset": 4,
+            "setting": "16",
+            "parameter": 2
+        }
+    }, {
+        "pk": 20,
+        "model": "medialib.renditionpresetparametersetting",
+        "fields": {
+            "renditionPreset": 4,
+            "setting": "44100",
+            "parameter": 1
+        }
+    }, {
+        "pk": 1,
+        "model": "medialib.renditiondefinitionparametersetting",
+        "fields": {
+            "renditionDefinition": 11,
+            "setting": "64",
+            "parameter": 13
+        }
+    }, {
+        "pk": 2,
+        "model": "medialib.renditiondefinitionparametersetting",
+        "fields": {
+            "renditionDefinition": 11,
+            "setting": "64",
+            "parameter": 12
+        }
+    }, {
+        "pk": 3,
+        "model": "medialib.renditiondefinitionparametersetting",
+        "fields": {
+            "renditionDefinition": 10,
+            "setting": "128",
+            "parameter": 13
+        }
+    }, {
+        "pk": 4,
+        "model": "medialib.renditiondefinitionparametersetting",
+        "fields": {
+            "renditionDefinition": 10,
+            "setting": "128",
+            "parameter": 12
+        }
+    }, {
+        "pk": 5,
+        "model": "medialib.renditiondefinitionparametersetting",
+        "fields": {
+            "renditionDefinition": 4,
+            "setting": "95",
+            "parameter": 10
+        }
+    }, {
+        "pk": 6,
+        "model": "medialib.renditiondefinitionparametersetting",
+        "fields": {
+            "renditionDefinition": 4,
+            "setting": "1024",
+            "parameter": 12
+        }
+    }, {
+        "pk": 7,
+        "model": "medialib.renditiondefinitionparametersetting",
+        "fields": {
+            "renditionDefinition": 4,
+            "setting": "512",
+            "parameter": 13
+        }
+    }, {
+        "pk": 8,
+        "model": "medialib.renditiondefinitionparametersetting",
+        "fields": {
+            "renditionDefinition": 3,
+            "setting": "512",
+            "parameter": 13
+        }
+    }, {
+        "pk": 9,
+        "model": "medialib.renditiondefinitionparametersetting",
+        "fields": {
+            "renditionDefinition": 3,
+            "setting": "512",
+            "parameter": 12
+        }
+    }, {
+        "pk": 10,
+        "model": "medialib.renditiondefinitionparametersetting",
+        "fields": {
+            "renditionDefinition": 3,
+            "setting": "80",
+            "parameter": 10
+        }
+    }, {
+        "pk": 11,
+        "model": "medialib.renditiondefinitionparametersetting",
+        "fields": {
+            "renditionDefinition": 2,
+            "setting": "253",
+            "parameter": 13
+        }
+    }, {
+        "pk": 12,
+        "model": "medialib.renditiondefinitionparametersetting",
+        "fields": {
+            "renditionDefinition": 2,
+            "setting": "256",
+            "parameter": 12
+        }
+    }, {
+        "pk": 13,
+        "model": "medialib.renditiondefinitionparametersetting",
+        "fields": {
+            "renditionDefinition": 2,
+            "setting": "50",
+            "parameter": 10
+        }
+    }
+]

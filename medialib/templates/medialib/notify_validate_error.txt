@@ -1,0 +1,6 @@
+{{settings.SITE_LABEL}} medialib validation error report
+	Site: {{ settings.SITE_LABEL }}
+	Item id: {{ item.id }}
+	Item name: {{ item.name }}
+	User: {{ item.owner.id }}: {{ item.owner.username }} ({{ item.owner.first_name }} {{ item.owner.last_name }})
+	Error: {{ message }}

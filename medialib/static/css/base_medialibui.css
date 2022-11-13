@@ -1,0 +1,253 @@
+@charset "UTF-8";
+
+/* Medialib Picker 
+==================================*/
+#twin-medialib {
+	position: absolute;
+	z-index:1001;
+	background: #ffffff;
+	padding: 10px;
+	-moz-border-radius: 15px;
+	-webkit-border-radius: 15px;
+	border-radius: 15px;
+	border: solid 2px #000000;
+	top: 100px;
+	left:-20px;
+	width: 600px;
+	height: 425px;
+	display: none;
+}
+
+#twin-medialib .cancel-button {
+	margin-left: 550px;
+}
+
+.twin-button-panel {
+	margin-top:10px;
+}
+
+.twin-button-panel button {
+	float:left;
+	margin-left:25px;
+}
+
+.twin-button-panel button.first {
+	margin-left: 0px;
+}
+
+.twin-library-picker {
+
+}
+
+.twin-media-picker {
+	width: 300px;
+	height: 150px;
+	overflow: auto;
+	background: #cccccc;
+	margin-top: 5px;
+}
+
+.twin-media-item {
+	width: 48px;
+	height: 48px;
+	background: white;
+	float: left;
+	margin: 10px;
+	color: #ffffff;
+	cursor: pointer;
+}
+
+.twin-media-item p {
+	margin: 0px;
+}
+
+.twin-media-picker .selected {
+	background: #999999;
+}
+
+.twin-media-item img {
+	width: 48px;
+	height: 48px;
+}
+
+.twin-media-item p {
+	text-align: center;
+	margin-top: 0px;
+}
+
+/* Medialib Uploader
+=================================*/
+
+#twin-medialib-uploader form {
+	width: 550px;
+	-moz-border-radius: 15px;
+	-webkit-border-radius: 15px;
+	border-radius: 15px;
+	float:left;
+}
+
+
+#twin-medialib-uploader form label {
+    float: left;
+    font-weight: bold;
+    line-height: 1.25;
+    margin-right: 10px;
+    margin-top: 2px;
+    min-height: 40px;
+    text-align: right;
+    width: 35%;
+}
+
+#twin-medialib-uploader form input.text, #twin-medialib-uploader form textarea {
+	width: 55%;
+}
+
+#twin-medialib-uploader form textarea {
+	height: 100px;
+	border: 1px #ffffff inset;
+}
+
+#twin-medialib-uploader form ul { 
+	margin-left:0px;
+	padding-left:0px; 
+}
+
+#twin-medialib-uploader form li {
+list-style: none outside none !important;
+    margin-bottom: 1em;
+    width: 100%;
+    min-height: 40px;
+}
+
+#twin-medialib-uploader .field_error {
+	float: none;
+	margin-top:10px;
+	margin-bottom:10px;
+	font-size:19px;
+}
+
+#twin-medialib-uploader input[type="submit"], #twin-medialib-uploader input[type="button"] {
+	margin-top: 0px;
+	margin-right: 6px;
+	float: left;
+}
+
+/* MediaLib Inspector
+====================== */
+
+div.twin-media-inspector {
+	position:		relative;
+}
+
+div.twin-media-inspector * {
+	vertical-align:		top;
+}
+
+div.twin-media-inspector > h2 {
+	font-size:		22px;
+	font-weight:		bold;
+}
+
+div.twin-media-inspector div.preview {
+	display:		inline-block;
+	width:			400px;
+	min-height:		225px;
+	background:		#000000;
+	margin:			4px;
+	padding:		4px;
+}
+
+div.twin-media-inspector div.preview img {
+	max-width:		400px;
+	max-height:		400px;
+}
+
+div.twin-media-inspector table.renditions-list {
+	display:		inline-block;
+	width:			320px;
+	background:		#393939;
+	margin:			4px;
+	padding:		4px;
+	border:			2px solid #393939;
+	-moz-border-radius:	4px;
+	border-radius:		4px;
+}
+
+div.twin-media-inspector table.renditions-list th {
+	text-align:		left;
+	padding-left:		2px;
+}
+div.twin-media-inspector table.renditions-list th.id {
+	width:			50px;
+}
+div.twin-media-inspector table.renditions-list th.name {
+	width:			200px;
+}
+div.twin-media-inspector table.renditions-list th.bytes {
+	width:			70px;
+}
+
+div.twin-media-inspector table.renditions-list thead tr {
+	position:		relative;
+	top:			0px;
+	color:			white;
+	background:		#999;
+	border-bottom:		1px solid black;
+}
+
+div.twin-media-inspector table.renditions-list tbody tr {
+	color:			#282828;
+	background:		#FFF;
+}
+
+
+div.twin-media-inspector table.renditions-list tbody tr.even {
+	background:		#E5E5E5;
+}
+
+div.twin-media-inspector table.renditions-list tbody tr.selected {
+	color:			#3E493E;
+	background:		#92AAD1;
+}
+
+div.twin-media-inspector table.renditions-list tbody tr:hover {
+	color:			#282828;
+	background:		#B4D2FF;
+}
+
+div.twin-media-inspector table.renditions-list tbody tr.selected:hover {
+	color:			#282828;
+	background:		#A3BEEB;
+}
+
+div.twin-media-inspector table.renditions-list tbody td {
+	font-size:		12px;
+	padding-left:		2px;
+}
+
+div.twin-media-inspector table.renditions-list thead.more td:hover {
+	color:			#282828;
+	background:		#B4D2FF;
+}
+
+div.twin-media-inspector table.renditions-list thead.more td:before {
+	content:		"-- more --";
+}
+
+div.twin-media-inspector div.render-error {
+	display:		block;
+	position:		absolute;
+	right:			0px;
+	top:			15px;
+	left:			750px;
+	bottom:			0px;
+	background:		#393939;
+	padding:		4px;
+	border:			2px solid #393939;
+	-moz-border-radius:	4px;
+	border-radius:		4px;
+	overflow:		auto;
+	white-space:		pre;
+	color:			#ffffff;
+	font-size:		12px;
+}

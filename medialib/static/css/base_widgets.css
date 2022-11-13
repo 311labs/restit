@@ -1,0 +1,168 @@
+@charset 'UTF-8';
+
+.twin-dialog {
+	color: white;
+	background: #3A3A3A;
+	-moz-border-radius: 10px;
+	-webkit-border-radius: 10px;
+	border-radius: 10px;
+	-moz-box-shadow: 2px 4px 4px 2px #1A1A1A;
+	-webkit-box-shadow: 2px 4px 4px 2px #1A1A1A;
+	box-shadow: 2px 4px 4px 2px #1A1A1A;
+	border: 1px solid #999;
+	width: 300px;
+}
+
+.twin-dialog textarea {
+	width: 255px;
+}
+
+.twin-dialog .twin-dialog-title {
+	-moz-top-left-border-radius: 10px;
+	-webkit-top-left-border-radius: 10px;
+	border-top-left-radius: 10px;
+	-moz-top-right-border-radius: 10px;
+	-webkit-top-right-border-radius: 10px;
+	border-top-right-radius: 10px;
+	background: #6C6C6C;
+	padding: 4px;
+}
+
+.twin-dialog .twin-dialog-msg {
+	max-width: 280px;
+	max-height: 400px;
+	overflow: auto;
+	padding: 14px;
+}
+
+.twin-dialog-buttons {
+	padding: 8px;
+	width: 100%;
+	text-align: center;
+}
+
+.twin-dialog button {
+	margin-right: 4px;
+	margin-left: 4px;
+}
+
+.twin-dialog .custom-dropdown-wrapper {
+	color: #828282;
+}
+
+.twin-progressbar {
+	width: 400px;
+	height: 20px;
+	border: 1px solid #999;
+}
+
+.twin-progressbar-progress {
+	width: 0px;
+	height: 20px;
+	background: #DC852B;
+}
+
+.twin-progressbar-text {
+	padding-top: 4px;
+	color: black;
+}
+
+.twin-slider.horizontal {
+	width: 400px;
+	height: 10px;
+	border: 1px solid #999;
+	cursor: pointer;
+}
+
+.twin-slider.horizontal .twin-slider-progress {
+	width: 0px;
+	height: 10px;
+	background: #E85C5A;
+}
+
+.twin-slider.horizontal .twin-slider-handle {
+	border: 1px solid #646464;
+	background: #B9B9B9;
+	width: 12px;
+	height: 16px;
+	margin-bottom: -4px;
+	-moz-border-radius: 10px;
+	-webkit-border-radius: 10px;
+	border-radius: 10px;
+}
+
+.twin-slider.vertical {
+	width: 10px;
+	height: 100px;
+	border: 1px solid #999;
+	cursor: pointer;
+}
+
+.twin-slider.vertical .twin-slider-progress {
+	width: 10px;
+	height: 0px;
+	background: #E85C5A;
+}
+
+.twin-slider.vertical .twin-slider-handle {
+	border: 1px solid #646464;
+	background: #B9B9B9;
+	width: 16px;
+	height: 12px;
+	margin-left: -4px;
+	-moz-border-radius: 10px;
+	-webkit-border-radius: 10px;
+	border-radius: 10px;
+}
+
+ul.twin-ratingbar {
+	display: inline-block;
+}
+
+.twin-ratingbar.stars li {
+	display: inline-block;
+	width: 16px;
+	height: 15px;
+	background: url(/static/img/star_off.png) no-repeat top left;
+	margin-right: 2px;
+	margin-bottom: -2px;
+}
+
+.twin-ratingbar.stars li.on {
+	background: url(/static/img/star_on.png) no-repeat top left;
+}
+/* Status Box Widget
+==================================================*/
+.status-box {
+	background-color: rgba(60, 60, 60, 0.5);
+	border: 10px solid rgba(60, 60, 60, 0.0);
+	position: relative;
+}
+
+.status-box div.status-contents {
+	position: absolute; top: 50%; left: 50%;	
+}
+
+.status-box .status-spinner {
+	position: relative; top: -50%; left: -50%;
+	background: #F9F9F9;
+	background-image: url(/static/img/loading.gif);
+	background-repeat: no-repeat;
+	background-position: center;
+	-moz-border-radius: 10px;
+	-webkit-border-radius: 10px;
+	border-radius: 10px;
+	height: 40px;
+	width: 40px;
+	opacity: 0.7;
+}
+
+.status-box .status-contents p {
+	margin-top: 8px;
+	position: relative; top: -50%; left: -50%;
+	margin-left: -50%;
+	color: #FFF;
+	text-align: center;
+
+}
+

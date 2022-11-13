@@ -1,0 +1,60 @@
+{% extends "medialib/base.html" %}
+{% block head %}
+<style type="text/css">
+#main {
+	width: 100%;
+}
+#content {
+	left: 10px;
+}
+table {
+	border-collapse: collapse;
+}
+td,
+th {
+	border: 1px dashed #808080;
+	border-left: 1px solid #303030;
+	border-right: 1px solid #303030;
+}
+th {
+	border-top: 2px solid #303030;
+	background-color: #ffff80;
+}
+tr.item td {
+	text-align: center;
+}
+td.filler {
+	border-right: none;
+}
+td.render_error {
+	border-left: none;
+	white-space: pre-wrap;
+}
+</style>
+{% endblock %}
+{%block main %}
+<h2>{{ title }}</h2>
+<table class="item">
+{% for i in items %}
+<tr>
+	<th>id</th>
+	<th>name</th>
+	<th>kind</th>
+	<th>state</th>
+	<th>owner</th>
+	<th>created</th>
+</tr>
+<tr class="item" id="item_{{ i.id }}">
+	<td class="id">{{ i.id }}</td>
+	<td class="name">{{ i.name }}</td>
+	<td class="kind">{{ i.get_kind_display }}</td>
+	<td class="state">{{ i.get_state_display }}</td>
+	<td class="owner">{{ i.owner.username }}</td>
+	<td class="created">{{ i.created }}</td>
+</tr><tr class="item_msg" id="item_{{ i.id }}_msg">
+	<td class="filler" colspan="2"></td>
+	<td colspan="4" class="render_error">{{ i.render_error }}</td>
+</tr>
+{% endfor %}
+</table>
+{%endblock %}

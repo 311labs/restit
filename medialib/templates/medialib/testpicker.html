@@ -1,0 +1,54 @@
+
+{% extends 'base.html' %}
+{% load google_analytics %}
+{% block head %}
+
+<!-- PUT CSS <link> HERE -->
+<link href="{{STATIC_URL}}account.css" rel="stylesheet" type="text/css" />
+
+<script type="text/javascript" charset="utf-8">
+$(document).ready(function(){
+	// Callback function for media picker
+	var testpicker;
+	function fileChoosen() {
+		alert('The media item with an ID of '+ testpicker.selected_id + ' was choosen. The name is '+ testpicker.selected_item.name);
+		$('#twin-medialib').hide();
+		$('#test-the-picker').click(function(evt){ testpicker.onActivatePicker(evt, '#test-the-picker'); });
+	}
+
+	testpicker = new TWIN.medialib.ui.Picker('#twin-medialib', {library: 3, 
+			upload_action_page: '/medialib/library/3/new',
+			upload_type:"img"}, {onSelected:fileChoosen});
+
+	$('#test-the-picker').click(function(evt){
+		testpicker.onActivatePicker(evt, '#test-the-picker');
+	});
+});
+</script>
+<style type="text/css">
+
+</style>
+{% endblock %}
+{% block top %}{{ block.super }}
+<!-- TOP BLOCK -->
+{% endblock %}
+{% block page %}
+	{% block content %}
+		<h3><a id="test-the-picker">Test media picker</a></h3>
+		<div id="twin-medialib" style="display: none"></div>
+
+		<form action="/medialib/library/3/new" enctype="multipart/form-data" method="post">
+		Title:<input type="text" name="name" /><br />
+		Desc:<input type="text" name="description" /><br />
+		File: <input type="file" name="file" />
+		<input type="submit" />
+		</form>
+		
+	{% endblock %}
+	<div id="footer">{% block footer %}
+	<!-- FOOTER BLOCK -->
+	{% endblock %}</div>
+{% endblock %}
+
+
+

@@ -1,0 +1,12 @@
+*~
+*.log
+*.pot
+*.pyc
+*.pyo
+.updated
+local_settings.py
+sqlite.db
+/var
+/django/static
+/django/media
+/django/settings.py

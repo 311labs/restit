@@ -1,0 +1,9 @@
+<smil>
+<head>
+  <meta base="{{ base }}" />
+</head><body>
+  <switch>{% for r in renditions %}
+    <video src="{{ r.url }}" system-bitrate="{{ r.bitrate }}"/>{% endfor %}
+  </switch>
+</body>
+</smil>
