@@ -6,7 +6,7 @@ DB_ROUTING_READ = settings.get("DB_ROUTING_READ", {})
 DB_ROUTING_WRITE = settings.get("DB_ROUTING_WRITE", {})
 DB_ROUTING_RELATIONS = settings.get("DB_ROUTING_RELATIONS", [('default', 'readonly')])
 DB_ROUTING_MIGRATIONS = settings.get("DB_ROUTING_MIGRATIONS", {})
-DB_ROUTING_MAPS = settings.get("DB_ROUTING_MAPS")
+DB_ROUTING_MAPS = settings.get("DB_ROUTING_MAPS", None)
 DB_ROUTING_READ_DEFAULT = settings.get("DB_ROUTING_READ_DEFAULT", "readonly")
 
 
