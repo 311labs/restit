@@ -16,7 +16,7 @@ class SettingsHelper():
         if key in self._app_cache:
             return self._app_cache[key]
         try:
-            defaults = importlib.import_module("{app_name}.settings")
+            defaults = importlib.import_module(f"{app_name}.settings")
         except Exception:
             defaults = dict()
         self._app_cache[key] = SettingsHelper(self.get(key, dict()), defaults)
@@ -38,7 +38,7 @@ class SettingsHelper():
 
     def __getattr__(self, name):
         """Access settings as an attribute."""
-        return self.get(name)
+        return self.get(name, None)
 
     def __getitem__(self, key):
         """Access settings as a dictionary key."""

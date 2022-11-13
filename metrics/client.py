@@ -1,18 +1,104 @@
-"""
-This app doesn't have any models, per se, but the following ``R`` class is a
-lightweight wrapper around Redis.
-
-"""
+import random
 from collections import OrderedDict
 from datetime import datetime, timedelta
 from django.template.defaultfilters import slugify
-from rest import settings
+from rest import settings, UberDict
 from ws4redis.redis import getRedisClient
 from . import utils
 
-app_settings = settings.getAppSettings("restlytics")
-
+app_settings = settings.getAppSettings("metrics")
 GRANULARITIES = ['seconds', 'minutes', 'hourly', 'daily', 'weekly', 'monthly', 'yearly']
+_redis_model = None
+
+
+def get_r():
+    global _redis_model
+    if not _redis_model:
+        _redis_model = R()
+    return _redis_model
+
+
+def metric(slug, num=1, category=None, expire=None, date=None):
+    """Create/Increment a metric."""
+    get_r().metric(slug, num=num, category=category, expire=expire, date=date)
+
+
+def gauge(slug, current_value):
+    """Set a value for a Gauge"""
+    get_r().gauge(slug, current_value)
+
+
+def set_metric(slug, value, category=None, expire=None, date=None):
+    """Create/Increment a metric."""
+    get_r().set_metric(slug, value, category=category, expire=expire, date=date)
+
+
+def get_metric(slug):
+    """Create/Increment a metric."""
+    return get_r().get_metric(slug)
+
+
+def get_metrics(slugs, since=None, granularity="daily"):
+    """Create/Increment a metric."""
+    return get_r().get_metric_history_chart_data(slugs, since, granularity)
+
+
+def get_gauge(slug):
+    """Create/Increment a gauge."""
+    return get_r().get_gauge(slug)
+
+
+def get_gauges(slugs):
+    """Create/Increment a gauge."""
+    return get_r().get_gauges(slugs)
+
+
+
+def generate_test_metrics(slug='test-metric', num=100, randomize=False,
+                          cap=None, increment_value=100):
+    """Generate some dummy metrics for the given ``slug``.
+
+    * ``slug`` -- the Metric slug
+    * ``num`` -- Number of days worth of metrics (default is 100)
+    * ``randomize`` -- Generate random metric values (default is False)
+    * ``cap`` -- If given, cap the maximum metric value.
+    * ``increment_value`` -- The amount by which we increment metrics on
+      subsequent days. If ``randomize`` is True, this value is used to
+      generate a ceiling for random values.
+
+    NOTE: This only generates metrics for daily and larger granularities.
+
+    """
+    r = get_r()
+    i = 0
+    if randomize:
+        random.seed()
+
+    r.r.sadd(r._metric_slugs_key, slug)  # Store the slug created.
+    for date in r._date_range('daily', datetime.utcnow() - timedelta(days=num)):
+        # Only keep the keys for daily and above granularities.
+        keys = r._build_keys(slug, date=date)
+        keys = [k for k in keys if k.split(":")[2] not in ['i', 's', 'h']]
+        for key in keys:
+            # The following is normally done in r.metric, but we're adding
+            # metrics for past days here, so this is duplicate code.
+            value = i
+            if randomize:
+                value = random.randint(0, i + increment_value)
+            if cap and r.r.get(key) >= cap:
+                value = 0  # Dont' increment this one any more.
+            r.r.incr(key, value)
+        i += increment_value
+
+
+def delete_test_metrics(slug='test-metric', num=100):
+    """Deletes the metrics created by ``generate_test_metrics``."""
+    r = get_r()
+    for date in r._date_range('daily', datetime.utcnow() - timedelta(days=num)):
+        keys = r._build_keys(slug, date=date)
+        r.r.srem(r._metric_slugs_key, slug)  # remove metric slugs
+        r.r.delete(*keys)  # delete the metrics
+
 
 
 def dedupe(items):
@@ -356,11 +442,14 @@ class R(object):
         minutes, hours, day, week, month, and year.
 
         """
-        results = OrderedDict()
+        results = UberDict()
         granularities = self._granularities()
         keys = self._build_keys(slug)
         for granularity, key in zip(granularities, keys):
-            results[granularity] = self.r.get(key)
+            try:
+                results[granularity] = int(self.r.get(key))
+            except Exception:
+                pass
         return results
 
     def get_metrics(self, slug_list):
@@ -462,7 +551,7 @@ class R(object):
         keys = list(dedupe(keys))
 
         # Fetch our data, replacing any None-values with zeros
-        results = [0 if v is None else v for v in self.r.mget(keys)]
+        results = [0 if v is None else int(v) for v in self.r.mget(keys)]
         results = zip(keys, results)
         return sorted(results, key=lambda t: t[0])
 
@@ -597,8 +686,16 @@ class R(object):
         k = self._gauge_key(slug)
         return self.r.get(k)
 
+    def get_gauges(self, slugs):
+        output = {}
+        for slug in slugs:
+            key = self._gauge_key(slug)
+            output[slug] = self.r.get(key)
+        return output
+
     def delete_gauge(self, slug):
         """Removes all gauges with the given ``slug``."""
         key = self._gauge_key(slug)
         self.r.delete(key)  # Remove the Gauge
         self.r.srem(self._gauge_slugs_key, slug)  # Remove from the set of keys
+

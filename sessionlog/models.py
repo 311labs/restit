@@ -31,6 +31,9 @@ class SessionLog(models.Model):
     def session(self):
         return GetSessionByID(self.session_id)
 
+    def __str__(self):
+        return f"{self.user} - {self.ip} - {self.is_closed}"
+
     def isActive(self):
         return self.session.exists(self.session_id)
 

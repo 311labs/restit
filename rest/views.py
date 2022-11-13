@@ -2,6 +2,7 @@
 from rest import crypto
 # from rest.middleware import get_request
 from rest import helpers
+from rest.crypto import util
 from rest.uberdict import UberDict
 from django.conf import settings
 from version import VERSION
@@ -73,6 +74,8 @@ class JSONEncoderExt(json.JSONEncoder):
         elif isinstance(obj, set):
             helpers.log_error(obj)
             return str(obj)
+        elif isinstance(obj, bytes):
+            return util.toString(obj)
         try:
             return super().default(obj)
         except Exception:
@@ -348,7 +351,7 @@ def _filter_recurse(remove, lst):
             p = item[0]
             if p[:len(remove)+1] == remove + ".":
                 ret.append((p[len(remove)+1:], item[1]))
-        elif type(item) in (str, str):
+        elif isinstance(item, str):
             if item[:len(remove)+1] == remove + ".":
                 ret.append(item[len(remove)+1:])
 

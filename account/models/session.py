@@ -60,6 +60,9 @@ class AuthSession(models.Model, RestModel):
             self.os = ua_info.get("os.family")
             self.device = ua_info.get("device.family")
 
+    def __str__(self):
+        return f"{self.member.username} - {self.ip} - {self.os} - {self.browser}"
+
     @classmethod
     def NewSession(cls, request):
         obj = cls(ip=request.ip, member=request.member, signature=request.signature)

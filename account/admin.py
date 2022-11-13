@@ -35,9 +35,23 @@ class AuthTokenAdmin(admin.ModelAdmin):
     list_display = ('created', 'member')
 
 
+class MemberDeviceAdmin(admin.ModelAdmin):
+    raw_id_fields = ['member']
+    date_hierarchy = "created"
+    list_display = ('created', 'member', "uuid", "kind")
+
+
+class SessionAdmin(admin.ModelAdmin):
+    raw_id_fields = ['member']
+    date_hierarchy = "created"
+    list_display = ('created', "last_activity", 'member', "ip", "device")
+
+
 admin.site.register(Member, MemberAdmin)
 admin.site.register(Group, GroupAdmin)
 admin.site.register(Membership, MembershipAdmin)
-# admin.site.register(AuthToken, AuthTokenAdmin)
+admin.site.register(AuthToken, AuthTokenAdmin)
+admin.site.register(MemberDevice, MemberDeviceAdmin)
+admin.site.register(AuthSession, SessionAdmin)
 
 
