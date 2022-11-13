@@ -7,10 +7,11 @@ from django.shortcuts import Http404
 from django.http import HttpResponseRedirect
 from django.utils.cache import patch_cache_control, add_never_cache_headers, patch_vary_headers
 
-from django.conf import settings
+from rest import settings
 from rest.views import restStatus
 from rest.models import RestError, requestHasPerms, PermisionDeniedException
 from rest import helpers
+import metrics
 
 from account.models import Member
 
@@ -20,6 +21,8 @@ from auditlog.models import PersistentLog
 import importlib
 import threading
 import traceback
+
+REST_METRICS = settings.get("REST_METRICS", False)
 
 
 # background task (no return)
@@ -48,26 +51,32 @@ def postpone(function):
 #
 def rest_error_catcher(func, request, *args, **kwargs):
     try:
+        if REST_METRICS:
+            metrics.metric("rest_calls")
         return func(request, *args, **kwargs)
     except PermisionDeniedException as err:
         helpers.log_error("permission denied {} for {}:{}".format(request.user, request.method, request.path))
         return restStatus(request, False, error=err.reason, error_code=err.code)
     except RestError as err:
         helpers.log_exception(err.reason)
+        if settings.get("REST_ERROR_METRICS", True):
+            metrics.metric("rest_errors")
         return restStatus(request, False, error=err.reason, error_code=err.code)
     except Exception as err:
         # TODO email errors to admins
         helpers.log_exception(request.path)
+        if settings.get("REST_ERROR_METRICS", True):
+            metrics.metric("rest_errors")
         stack = str(traceback.format_exc())
         host = request.get_host()
-        server = getattr(settings, "HOSTNAME", "unknown")
+        server = settings.get("HOSTNAME", "unknown")
         try:
             body = request.body.decode('utf-8')
         except Exception:
             body = request.DATA.asDict()
 
         PersistentLog.logException(body, request=request, component="rest", action="error")
-        if hasattr(settings, "NOTIFY_REST_ERRORS") and settings.NOTIFY_REST_ERRORS:
+        if settings.NOTIFY_REST_ERRORS:
             subject = "REST Error: {} - {}".format(host, str(err))
             # hide sensative data in body
             # ebody = body
