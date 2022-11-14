@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models import Q
-from django.conf import settings
+from rest import settings
+app_settings = settings.getAppSettings("account")
 import re
 
 from rest.models import RestModel, MetaDataModel, MetaDataBase, RestValidationError, PermisionDeniedException
@@ -13,8 +14,8 @@ from rest.views import restPermissionDenied
 from .member import Member
 
 
-MEMBERSHIP_ROLES = getattr(settings, "MEMBERSHIP_ROLES", None)
-
+MEMBERSHIP_ROLES = settings.get("MEMBERSHIP_ROLES", None)
+TRUE_VALUES = app_settings.get("TRUE_VALUES", [])
 
 class Group(models.Model, RestModel, MetaDataModel):
     """
@@ -311,7 +312,7 @@ class Group(models.Model, RestModel, MetaDataModel):
             Member = RestModel.getModel("account", "Member")
             res = Member.objects.filter(is_active=True, memberships__group=self, memberships__state__gte=-10)
             if perms:
-                res = res.filter(memberships__group=self, memberships__permissions__name__in=perms)
+                res = res.filter(memberships__group=self, memberships__properties__category="permissions", memberships__properties__key__in=perms, memberships__properties__value__in=TRUE_VALUES)
             if role:
                 res = res.filter(memberships__group=self, memberships__role__in=role)
             return res.distinct()
@@ -353,9 +354,9 @@ class Group(models.Model, RestModel, MetaDataModel):
 
     def sendEmail(self, role=None, perms=None, subject="Notification", template="email/base", body="", context={}, master_perm=None):
         c = {
-            'settings':settings,
-            'subject':subject,
-            'from': settings.DEFAULT_FROM_EMAIL,
+            'settings': settings,
+            'subject': subject,
+            'from': settings.get("DEFAULT_FROM_EMAIL"),
             "body": body,
             'group': self,
             'sent_to': None,
