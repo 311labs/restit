@@ -307,7 +307,6 @@ class Group(models.Model, RestModel, MetaDataModel):
         if role:
             if type(role) in [str, str]:
                 role = [role]
-
         if as_member:
             Member = RestModel.getModel("account", "Member")
             res = Member.objects.filter(is_active=True, memberships__group=self, memberships__state__gte=-10)
@@ -318,7 +317,7 @@ class Group(models.Model, RestModel, MetaDataModel):
             return res.distinct()
         res = self.memberships.filter(state__gte=-10)
         if perms:
-            res = res.filter(permissions__name__in=perms)
+            res = res.filter(properties__category="permissions", properties__key__in=perms, properties__value__in=TRUE_VALUES)
         if role:
             res = res.filter(role__in=role)
         return res.distinct()
