@@ -54,6 +54,11 @@ def rest_on_get_metrics(request, pk=None):
     return rv.restReturn(request, dict(data=result))
 
 
+@rd.urlGET(r'^slugs$')
+def rest_on_get_metrics_slugs(request, pk=None):
+    return rv.restReturn(request, dict(data=metrics.get_slugs()))
+
+
 @rd.urlPOST(r'^guage$')
 def rest_on_guage(request, pk=None):
     data = request.DATA.toObject()

@@ -53,6 +53,10 @@ def get_gauges(slugs):
     return get_r().get_gauges(slugs)
 
 
+def get_slugs():
+    """Create/Increment a gauge."""
+    return list(get_r().metric_slugs())
+
 
 def generate_test_metrics(slug='test-metric', num=100, randomize=False,
                           cap=None, increment_value=100):
