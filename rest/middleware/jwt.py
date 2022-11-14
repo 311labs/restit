@@ -31,7 +31,8 @@ class JWTokenMiddleware(object):
         request.token_bearer = None
         request.device_id = None
         request.auth_model = None
-        request.ip = helpers.getRemoteIP(request)
+        # request.ip = helpers.getRemoteIP(request)
+        # request.location = None
         token = request.META.get('HTTP_AUTHORIZATION', "").strip()
         if token.count(" ") != 1:
             self.process_cookie(request)

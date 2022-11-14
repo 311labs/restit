@@ -30,6 +30,8 @@ class SimpleSessionMiddleware(object):
     def process_request(self, request):
         session_key = request.COOKIES.get(settings.SESSION_COOKIE_NAME)
         request.session = self.SessionStore(session_key)
+        request.ip = helpers.getRemoteIP(request)
+        request.location = None
         # helpers.log_error("session keys", session_key, request.session.session_key)
 
     def process_response(self, request, response):
