@@ -76,20 +76,4 @@ def rest_on_users_membership(request, group_id=None):
         return rv.restStatus(request, False, error="not found", error_code=404)
     return ms.restGet(request)
 
-# LEGACY SUPPORT
-@rd.urlPOST(r'^group/apply/children/setting$')
-@rd.perm_required("manage_groups")
-def apply_children_setting(request):
-    if not request.group:
-        return rv.restStatus(request, False, error="Group is required.")
-    setting = request.DATA.get("setting", None)
-    value = request.DATA.get("value", None)
-    if not setting or not value:
-        return rv.restStatus(request, False, error="Both setting and value are required.")
-    task = tq.Task.Publish("payauth", "on_background_job", {
-        "bg_handler": "apply_children_setting",
-        "setting": setting,
-        "value": value,
-        "group_id": request.group.id
-    }, channel="tq_app_handler_update")
-    return rv.restStatus(request, True, msg="Task has been scheduled!")
+

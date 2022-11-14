@@ -38,9 +38,7 @@ class Membership(models.Model, RestModel, MetaDataModel):
                     'created',
                     'role',
                     'status',
-                    'state',
-                    'perms',
-                    'member_id'
+                    'state'
                 ],
                 "graphs": {
                     "member": "basic"
@@ -63,16 +61,6 @@ class Membership(models.Model, RestModel, MetaDataModel):
     @property
     def is_enabled(self):
         return self.state >= -10
-
-    # required for legacy payauth support
-    @property
-    def member_id(self):
-        return self.member.id
-
-    # required for legacy payauth support
-    @property
-    def perms(self):
-        return self.getPermissions()
 
     def set_action(self, value):
         if value == "resend_invite":
