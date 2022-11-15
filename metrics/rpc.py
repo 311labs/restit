@@ -19,12 +19,13 @@ def rest_on_new_metric(request):
     if data.value is None:
         data.value = 1
     metrics.metric(data.slug, data.value, category=data.catagory, expire=data.expire)
-    if LOCATION_METRICS:
+    if request.DATA.get("geolocate", False, field_type=bool):
         if request.location is None:
             request.location = GeoIP.get(request.ip)
         if request.location and request.location.country:
             country = request.location.country.lower().replace(" ", "_")
-            metrics.metric(f"country__{country}__{data.slug}")
+            state = request.location.state.lower().replace(" ", "_")
+            metrics.metric([f"geo_country__{country}__{data.slug}", f"geo_state__{state}__{data.slug}"])
     return rv.restStatus(request, True)
 
 

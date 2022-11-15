@@ -421,6 +421,10 @@ class R(object):
             m:<slug>:y:<yyyy>                # Year
 
         """
+        if isinstance(slug, list):
+            for s in slug:
+                self.metric(s, num, category, expire, date)
+            return
         # Add the slug to the set of metric slugs
         self.r.sadd(self._metric_slugs_key, slug)
 
