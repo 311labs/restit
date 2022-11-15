@@ -56,7 +56,11 @@ def rest_on_get_metrics(request, pk=None):
 
 @rd.urlGET(r'^slugs$')
 def rest_on_get_metrics_slugs(request, pk=None):
-    return rv.restReturn(request, dict(data=metrics.get_slugs()))
+    slugs = metrics.get_slugs()
+    prefix = request.DATA.get("prefix")
+    if prefix:
+        slugs = [s for s in slugs if s.startswith(prefix)]
+    return rv.restReturn(request, dict(data=slugs))
 
 
 @rd.urlPOST(r'^guage$')
