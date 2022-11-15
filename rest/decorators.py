@@ -53,6 +53,7 @@ def rest_error_catcher(func, request, *args, **kwargs):
     try:
         if REST_METRICS:
             metrics.metric("rest_calls")
+            metrics.metric(f"rest_call_{request.path}")
         return func(request, *args, **kwargs)
     except PermisionDeniedException as err:
         helpers.log_error("permission denied {} for {}:{}".format(request.user, request.method, request.path))
