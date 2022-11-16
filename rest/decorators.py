@@ -62,13 +62,13 @@ def rest_error_catcher(func, request, *args, **kwargs):
     except RestError as err:
         helpers.log_exception(err.reason)
         if settings.get("REST_ERROR_METRICS", True):
-            metrics.metric("rest_errors", category="rest_calls")
+            metrics.metric("rest_errors")
         return restStatus(request, False, error=err.reason, error_code=err.code)
     except Exception as err:
         # TODO email errors to admins
         helpers.log_exception(request.path)
         if settings.get("REST_ERROR_METRICS", True):
-            metrics.metric("rest_errors", category="rest_calls")
+            metrics.metric("rest_errors")
         stack = str(traceback.format_exc())
         host = request.get_host()
         server = settings.get("HOSTNAME", "unknown")
