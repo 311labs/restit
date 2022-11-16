@@ -52,9 +52,9 @@ def postpone(function):
 def rest_error_catcher(func, request, *args, **kwargs):
     try:
         if REST_METRICS:
-            metrics.metric("rest_calls")
+            metrics.metric("rest_calls", category="rest_calls")
             slug_path = request.path.replace("/", "__")
-            metrics.metric(f"rest_call_{slug_path}")
+            metrics.metric(f"rest_call_{slug_path}", category="rest_calls")
         return func(request, *args, **kwargs)
     except PermisionDeniedException as err:
         helpers.log_error("permission denied {} for {}:{}".format(request.user, request.method, request.path))
@@ -62,13 +62,13 @@ def rest_error_catcher(func, request, *args, **kwargs):
     except RestError as err:
         helpers.log_exception(err.reason)
         if settings.get("REST_ERROR_METRICS", True):
-            metrics.metric("rest_errors")
+            metrics.metric("rest_errors", category="rest_calls")
         return restStatus(request, False, error=err.reason, error_code=err.code)
     except Exception as err:
         # TODO email errors to admins
         helpers.log_exception(request.path)
         if settings.get("REST_ERROR_METRICS", True):
-            metrics.metric("rest_errors")
+            metrics.metric("rest_errors", category="rest_calls")
         stack = str(traceback.format_exc())
         host = request.get_host()
         server = settings.get("HOSTNAME", "unknown")

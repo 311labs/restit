@@ -25,7 +25,9 @@ def rest_on_new_metric(request):
         if request.location and request.location.country:
             country = request.location.country.lower().replace(" ", "_")
             state = request.location.state.lower().replace(" ", "_")
-            metrics.metric([f"geo_country__{country}__{data.slug}", f"geo_state__{state}__{data.slug}"])
+            metrics.metric(f"geo_country__{country}__{data.slug}", category="geo_country")
+            metrics.metric(f"geo_state__{state}__{data.slug}", category="geo_state")
+            
     return rv.restStatus(request, True)
 
 
