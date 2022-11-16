@@ -52,7 +52,7 @@ def postpone(function):
 def rest_error_catcher(func, request, *args, **kwargs):
     try:
         if REST_METRICS:
-            metrics.metric("rest_calls", category="rest_calls")
+            metrics.metric("rest_calls")
             slug_path = request.path.replace("/", "__")
             metrics.metric(f"rest_call_{slug_path}", category="rest_calls")
         return func(request, *args, **kwargs)
