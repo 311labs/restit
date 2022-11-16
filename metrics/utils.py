@@ -1,4 +1,13 @@
 
+def to_string(value):
+    if isinstance(value, bytes):
+        value = value.decode()
+    elif isinstance(value, bytearray):
+        value = value.decode("utf-8")
+    elif isinstance(value, (int, float)):
+        value = str(value)
+    return value
+
 
 def to_int_list(values):
     """Converts the given list of vlues into a list of integers. If the

@@ -18,7 +18,7 @@ def rest_on_new_metric(request):
         return rv.restStatus(request, False)
     if data.value is None:
         data.value = 1
-    metrics.metric(data.slug, data.value, category=data.catagory, expire=data.expire)
+    metrics.metric(data.slug, data.value, category=data.category, expire=data.expire)
     if request.DATA.get("geolocate", False, field_type=bool):
         if request.location is None:
             request.location = GeoIP.get(request.ip)
@@ -44,11 +44,16 @@ def rest_on_get_metric(request):
 @rd.urlGET(r'^metrics$')
 def rest_on_get_metrics(request, pk=None):
     # slug, since, granularity
+    since = request.DATA.get("since", field_type="datetime")
+    granularity = request.DATA.get(["granularity", "period"], default="daily")
+    category = request.DATA.get("category")
+    if category:
+        result = metrics.get_category_metrics(category, since, granularity)
+        return rv.restReturn(request, dict(data=result))
     slugs = request.DATA.getlist(["slugs", "slug"])
     if slugs is None:
         return rv.restStatus(request, False)
-    since = request.DATA.get("since", field_type="datetime")
-    granularity = request.DATA.get(["granularity", "period"], default="daily")
+
     result = metrics.get_metrics(slugs, since, granularity)
     if result is None:
         return rv.restStatus(request, False)
@@ -57,7 +62,8 @@ def rest_on_get_metrics(request, pk=None):
 
 @rd.urlGET(r'^slugs$')
 def rest_on_get_metrics_slugs(request, pk=None):
-    slugs = metrics.get_slugs()
+    category = request.DATA.get("category", None)
+    slugs = metrics.get_slugs(category)
     prefix = request.DATA.get("prefix")
     if prefix:
         slugs = [s for s in slugs if s.startswith(prefix)]

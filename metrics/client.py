@@ -43,19 +43,29 @@ def get_metrics(slugs, since=None, granularity="daily"):
     return get_r().get_metric_history_chart_data(slugs, since, granularity)
 
 
+def get_category_metrics(category, since=None, granularity="daily"):
+    """Create/Increment a metric."""
+    r = get_r()
+    slugs = [utils.to_string(s) for s in list(r.category_slugs(category))]
+    print(slugs)
+    return r.get_metric_history_chart_data(slugs, since, granularity)
+
+
+def get_slugs(category=None):
+    """get slug list"""
+    if category:
+        return list(get_r().category_slugs(category))
+    return list(get_r().metric_slugs())
+
+
 def get_gauge(slug):
-    """Create/Increment a gauge."""
+    """get a gauge."""
     return get_r().get_gauge(slug)
 
 
 def get_gauges(slugs):
     """Create/Increment a gauge."""
     return get_r().get_gauges(slugs)
-
-
-def get_slugs():
-    """Create/Increment a gauge."""
-    return list(get_r().metric_slugs())
 
 
 def generate_test_metrics(slug='test-metric', num=100, randomize=False,
@@ -213,7 +223,7 @@ class R(object):
     def _category_key(self, category):
         return u"c:{0}".format(category)
 
-    def _category_slugs(self, category):
+    def category_slugs(self, category):
         """Returns a set of the metric slugs for the given category"""
         key = self._category_key(category)
         slugs = self.r.smembers(key)
@@ -319,7 +329,7 @@ class R(object):
         result = OrderedDict()
         categories = sorted(self.r.smembers(self._categories_key))
         for category in categories:
-            result[category] = self._category_slugs(category)
+            result[category] = self.category_slugs(category)
 
         # We also need to see the uncategorized metric slugs, so need some way
         # to check which slugs are not already stored.
@@ -490,7 +500,7 @@ class R(object):
 
     def get_category_metrics(self, category):
         """Get metrics belonging to the given category"""
-        slug_list = self._category_slugs(category)
+        slug_list = self.category_slugs(category)
         return self.get_metrics(slug_list)
 
     def delete_category(self, category):
