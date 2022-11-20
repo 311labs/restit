@@ -5,6 +5,7 @@ from django.http import HttpResponse
 from html import escape
 from django.conf import settings
 from rest.helpers import toString
+from rest import settings
 import os
 
 try:
@@ -13,7 +14,7 @@ except:
     pass
 
 def fetch_resources(uri, rel):
-    if "cdn.payauth" in uri:
+    if settings.get("CDN_DOMAIN", "cdn.") in uri:
         return uri
     path = os.path.join(settings.STATIC_ROOT, uri.replace("/static/", ""))
     return path
