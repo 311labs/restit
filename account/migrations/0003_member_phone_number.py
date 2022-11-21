@@ -7,7 +7,7 @@ import rest.fields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('account', '0001_initial'),
+        ('account', '0002_member_picture'),
     ]
 
     operations = [
