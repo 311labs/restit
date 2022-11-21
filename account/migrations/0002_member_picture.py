@@ -8,12 +8,13 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('account', '0001_initial'),
+        ('medialib', '0001_initial'),
     ]
 
     operations = [
         migrations.AddField(
             model_name='member',
-            name='phone_number',
-            field=rest.fields.FormattedField(default=None, max_length=64, null=True),
-        ),
+            name='picture',
+            field=models.ForeignKey(blank=True, help_text='Profile picture', null=True, on_delete=models.deletion.CASCADE, related_name='+', to='medialib.mediaitem'),
+        )
     ]
