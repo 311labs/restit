@@ -951,7 +951,7 @@ class Member(User, RestModel, MetaDataModel):
         engine = import_module(settings.SESSION_ENGINE)
         session = engine.SessionStore(key)
         if "member_id" in session:
-            return cls.objects().filter(pk=session["member_id"]).last()
+            return cls.objects.filter(pk=session["member_id"]).last()
         return None
 
     @classmethod
