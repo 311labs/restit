@@ -125,7 +125,7 @@ def member_login_uname_pword(request, username, password):
     if request.session is not None:
         request.session["member_id"] = member.pk
         request.session["_auth_user_id"] = member.pk
-    return member.restGet(request, graph="me")
+    return restGet(request, dict(id=member.pk, session_key=request.session.session_key))
 
 
 def member_login_uname_code(request, username, auth_code):
