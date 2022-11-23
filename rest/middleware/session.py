@@ -1,15 +1,15 @@
 from importlib import import_module
-from django.conf import settings
 from django.utils.cache import patch_vary_headers
 from django.utils.http import http_date
 from rest import ua
 from rest import helpers
+from rest import settings
 import time
 
 # HACK FOR SameSite
 from http.cookies import Morsel
 Morsel._reserved['samesite'] = 'SameSite'
-SESSION_COOKIE_SAMESITE = getattr(settings, "SESSION_COOKIE_SAMESITE", None)
+SESSION_COOKIE_SAMESITE = settings.SESSION_COOKIE_SAMESITE
 
 
 class SimpleSessionMiddleware(object):
