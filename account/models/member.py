@@ -512,6 +512,10 @@ class Member(User, RestModel, MetaDataModel):
         if request and request.member == self:
             self.log("logout", "user logged out", request, method="logout", level=18)
             auth_logout(request)
+            if "member_id" in request.session:
+                del request.session["member_id"]
+            if "_auth_user_id" in request.session:
+                del request.session["_auth_user_id"]
 
         # else:
         #     qset = self.getActiveSessions()
@@ -933,25 +937,35 @@ class Member(User, RestModel, MetaDataModel):
         If the model can authenticate the connection it should return dict 
         with kind and pk of the model that is authenticaed
         """
+        from rest import UberDict
+        member = cls.getMemberFromSessionStore(auth_data.token)
+        if member is not None:
+            return UberDict(kind="member", pk=member.pk, member=member)
+        return None
 
+    @classmethod
+    def getMemberFromSessionStore(cls, key):
         # assume this is a session key
         # this is deprecated, only using for backwards
         from importlib import import_module
-        from rest import UberDict
-        # engine = import_module(settings.SESSION_ENGINE)
-        # SessionStore = engine.SessionStore
-        # session = SessionStore(auth_data.token)
-        session = Session.objects.filter(session_key=auth_data.token).last()
+        engine = import_module(settings.SESSION_ENGINE)
+        session = engine.SessionStore(key)
+        if "member_id" in session:
+            return cls.objects().filter(pk=session["member_id"]).last()
+        return None
+
+    @classmethod
+    def getMemberFromSession(cls, key):
+        session = Session.objects.filter(session_key=key).last()
         if session is None:
-            rest_helpers.log_print("no session for key", auth_data)
+            rest_helpers.log_print("no session for key", key)
             return None
         session_data = session.get_decoded()
         rest_helpers.log_print(session_data)
-        uid = session_data.get('_auth_user_id')
-        member = cls.objects.filter(pk=uid).last()
-        if member is not None:
-            return UberDict(kind="member", pk=uid, member=member)
-        return None
+        uid = session_data.get('_auth_user_id', None)
+        if uid is None:
+            return None
+        return cls.objects.filter(pk=uid).last()
 
 
 class MemberMetaData(MetaDataBase):

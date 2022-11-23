@@ -1,4 +1,4 @@
-from django.conf import settings
+from rest import settings
 from django.apps import apps
 from rest import helpers
 
@@ -10,8 +10,8 @@ from django.utils.cache import patch_vary_headers
 from http.cookies import Morsel
 Morsel._reserved['samesite'] = 'SameSite'
 
-JWT_COOKIE_KEY = getattr(settings, "JWT_COOKIE_KEY", "JWT_TOKEN")
-JWT_ALLOW_COOKIE = getattr(settings, "JWT_ALLOW_COOKIE", False)
+JWT_COOKIE_KEY = settings.get("JWT_COOKIE_KEY", "JWT_TOKEN")
+JWT_ALLOW_COOKIE = settings.get("JWT_ALLOW_COOKIE", False)
 
 
 class JWTokenMiddleware(object):
@@ -132,7 +132,7 @@ class JWTokenMiddleware(object):
                     secure=False,
                     httponly=False,
                     max_age=86400)
-                response.cookies[JWT_COOKIE_KEY]["samesite"] = "Lax"
+                response.cookies[JWT_COOKIE_KEY]["samesite"] = settings.get("SESSION_COOKIE_SAMESITE", "Lax")
         elif request.clear_jwt_cookie:
             response.delete_cookie(JWT_COOKIE_KEY)
 

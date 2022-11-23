@@ -122,6 +122,9 @@ def member_login_uname_pword(request, username, password):
         return restStatus(request, False, error="Password or Username is incorrect", error_code=401)
 
     member.log("password_login", "password login", request, method="login", level=7)
+    if request.session:
+        request.session["member_id"] = member.pk
+        request.session["_auth_user_id"] = member.pk
     return member.restGet(request, graph="me")
 
 
