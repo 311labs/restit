@@ -1,3 +1,4 @@
+from datetime import datetime
 from rest import decorators as rd
 from rest import views as rv
 from rest import settings
@@ -46,7 +47,7 @@ def rest_on_get_metric(request):
 @rd.urlGET(r'^metrics$')
 def rest_on_get_metrics(request, pk=None):
     # slug, since, granularity
-    since = request.DATA.get("since", field_type="datetime")
+    since = request.DATA.get("since", field_type=datetime)
     granularity = request.DATA.get(["granularity", "period"], default="daily")
     category = request.DATA.get("category")
     if category:
