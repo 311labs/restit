@@ -29,12 +29,23 @@ def get(key, default=None):
 
 def set(key, value):
     c = getRedisClient()
-    return c.set(key, value)
+    v = c.set(key, value)
+    if expire:
+        c.expire(key, expire)
+    return v
 
 
-def incr(key, amount=1):
+def incr(key, amount=1, expire=None):
     c = getRedisClient()
-    return c.incr(key, amount)
+    v = c.incr(key, amount)
+    if expire:
+        c.expire(key, expire)
+    return v
+
+
+def expire(key, expire):
+    c = getRedisClient()
+    return c.expire(key, expire)
 
 
 def decr(key, amount=1):

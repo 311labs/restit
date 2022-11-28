@@ -18,9 +18,9 @@ def get_r():
     return _redis_model
 
 
-def metric(slug, num=1, category=None, expire=None, date=None):
+def metric(slug, num=1, category=None, expire=None, date=None, min_granularity=None):
     """Create/Increment a metric."""
-    get_r().metric(slug, num=num, category=category, expire=expire, date=date)
+    get_r().metric(slug, num=num, category=category, expire=expire, date=date, min_granularity=min_granularity)
 
 
 def gauge(slug, current_value):
@@ -33,8 +33,8 @@ def set_metric(slug, value, category=None, expire=None, date=None):
     get_r().set_metric(slug, value, category=category, expire=expire, date=date)
 
 
-def get_metric(slug):
-    """Create/Increment a metric."""
+def get_metric(slug, granularity=None):
+    """get a metric."""
     return get_r().get_metric(slug)
 
 
@@ -64,7 +64,7 @@ def get_gauge(slug):
 
 
 def get_gauges(slugs):
-    """Create/Increment a gauge."""
+    """list guages."""
     return get_r().get_gauges(slugs)
 
 
@@ -246,13 +246,15 @@ class R(object):
         # Store all category names in a Redis set, for easy retrieval
         self.r.sadd(self._categories_key, category)
 
-    def _granularities(self):
+    def _granularities(self, min_granularity=None):
         """Returns a generator of all possible granularities based on the
         MIN_GRANULARITY and MAX_GRANULARITY settings.
         """
+        if min_granularity is None:
+            min_granularity = app_settings.MIN_GRANULARITY
         keep = False
         for g in GRANULARITIES:
-            if g == app_settings.MIN_GRANULARITY and not keep:
+            if g == min_granularity and not keep:
                 keep = True
             elif g == app_settings.MAX_GRANULARITY and keep:
                 keep = False
@@ -285,16 +287,16 @@ class R(object):
             return "{year}-{week_no}".format(year=date.isocalendar()[0], week_no=date.isocalendar()[1])
         return "%Y-%{0}".format('W' if app_settings.MONDAY_FIRST_DAY_OF_WEEK else 'U')
 
-    def _build_key_patterns(self, slug, date):
+    def _build_key_patterns(self, slug, date, min_granularity=None):
         """Builds an OrderedDict of metric keys and patterns for the given slug
         and date."""
         # we want to keep the order, from smallest to largest granularity
         patts = OrderedDict()
-        for g in self._granularities():
+        for g in self._granularities(min_granularity=min_granularity):
             patts[g] = self._get_metric_key_pattern(g, slug, date)
         return patts
 
-    def _build_keys(self, slug, date=None, granularity='all'):
+    def _build_keys(self, slug, date=None, granularity='all', min_granularity=None):
         """Builds redis keys used to store metrics.
 
         * ``slug`` -- a slug used for a metric, e.g. "user-signups"
@@ -310,7 +312,7 @@ class R(object):
         slug = slugify(slug)  # Ensure slugs have a consistent format
         if date is None:
             date = datetime.utcnow()
-        patts = self._build_key_patterns(slug, date)
+        patts = self._build_key_patterns(slug, date, min_granularity=min_granularity)
         if granularity == "all":
             return list(patts.values())
         return [patts[granularity]]
@@ -404,7 +406,7 @@ class R(object):
             for k in keys:
                 self.r.expire(k, expire)
 
-    def metric(self, slug, num=1, category=None, expire=None, date=None):
+    def metric(self, slug, num=1, category=None, expire=None, date=None, min_granularity=None):
         """Records a metric, creating it if it doesn't exist or incrementing it
         if it does. All metrics are prefixed with 'm', and automatically
         aggregate for Seconds, Minutes, Hours, Day, Week, Month, and Year.
@@ -443,7 +445,7 @@ class R(object):
 
         # Increment keys. NOTE: current redis-py (2.7.2) doesn't include an
         # incrby method; .incr accepts a second ``amount`` parameter.
-        keys = self._build_keys(slug, date=date)
+        keys = self._build_keys(slug, date=date, min_granularity=min_granularity)
 
         # Use a pipeline to speed up incrementing multiple keys
         pipe = self.r.pipeline()
