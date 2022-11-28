@@ -1,27 +1,17 @@
-import os
 import json
 import string
 from datetime import datetime, date
 from auditlog.models import PersistentLog
 from rest import helpers as rest_helpers
 from rest.uberdict import UberDict
+from rest.encryption import DECRYPTER
 from objict import objict
-from rest.crypto.privpub import PrivatePublicEncryption
-from django.http.request import QueryDict
 
-from django.conf import settings
+from django.http.request import QueryDict
 
 NOTFOUND = "311!@#$%^&*"
 SAFE_ASCII = set(string.printable)
 # load decrypter
-DECRYPTER_KEY_FILE = os.path.join(os.path.dirname(settings.ROOT), "config", "decrypt_key.pem")
-DECRYPTER = None
-if not os.path.exists(DECRYPTER_KEY_FILE):
-    print(("WARNING, failed to load decrypter!!! {}".format(DECRYPTER_KEY_FILE)))
-    DECRYPTER_KEY_FILE  = os.path.join(os.path.dirname(os.path.dirname(settings.ROOT)), "config", "decrypt_key.pem")
-
-if os.path.exists(DECRYPTER_KEY_FILE):
-    DECRYPTER = PrivatePublicEncryption(private_key_file=DECRYPTER_KEY_FILE)
 
 
 class RequestData(object):
@@ -235,6 +225,13 @@ class RequestData(object):
     def removeUnderscores(self):
         if self.__data:
             self.__data = rest_helpers.removeUnderscoreKeys(self.__data)
+
+    def hasRequired(self, keys):
+        # this method returns true if it has all the required keys
+        for k in keys:
+            if k not in self:
+                return False
+        return True
 
     def has_key(self, key):
         if type(key) is list:

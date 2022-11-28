@@ -400,6 +400,21 @@ class UberDict(dict):
             self[key] = default
         return val
 
+    def set(self, key, value):
+        if "." in key:
+            data = self
+            tokens = key.split('.')
+            for token in tokens[:-1]:
+                v = data.get(token)
+                if v is None:
+                    v = UberDict()
+                data[token] = v
+                data = v
+            data[tokens[-1]] = value
+            return None
+        self[key] = value
+        return None
+
     def __contains__(self, key):
         return self.get(key, _MISSING) is not _MISSING
 

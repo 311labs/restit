@@ -21,7 +21,7 @@ import threading
 from rest import helpers as rest_helpers
 from rest.uberdict import UberDict
 from rest import search
-from rest.crypto.privpub import PrivatePublicEncryption
+from rest.encryption import ENCRYPTER, DECRYPTER
 
 import importlib
 
@@ -31,11 +31,6 @@ GRAPH_HELPERS.get_request = None
 GRAPH_HELPERS.views = None
 
 NOTFOUND = "311!@#$%^&*"
-
-ENCRYPTER_KEY_FILE = os.path.join(settings.ROOT, "config", "encrypt_key.pem")
-ENCRYPTER = None
-if os.path.exists(ENCRYPTER_KEY_FILE):
-    ENCRYPTER = PrivatePublicEncryption(private_key_file=ENCRYPTER_KEY_FILE)
 
 DB_ROUTING_MAPS = getattr(settings, "DB_ROUTING_MAPS", {})
 
@@ -279,10 +274,12 @@ class MetaDataModel(object):
         for k,v in list(data.items()):
             self.setProperty(k, v, category, request=request, using=using)
 
-    def setProperty(self, key, value, category=None, request=None, using=None, ascii_only=False):
+    def setProperty(self, key, value, category=None, request=None, using=None, ascii_only=False, encrypted=False):
         # rest_helpers.log_print("{}:{} ({})".format(key, value, type(value)))
         if ascii_only and isinstance(value, str):
             value = "".join([x for x in value if x in string.printable])
+        if encrypted:
+            value = ENCRYPTER.encrypt(value)
         on_change = None
         if not using:
             using = getattr(self.RestMeta, "DATABASE", using)
@@ -361,12 +358,15 @@ class MetaDataModel(object):
             request.member.notifyWithPermission(notify, "protected '{}' field changed".format(full_key), msg, email_only=True)
         return has_changed
 
-    def getProperty(self, key, default=None, category=None, field_type=None):
+    def getProperty(self, key, default=None, category=None, field_type=None, decrypted=False):
         try:
             if "." in key:
                 category, key = key.split('.')
-            return self.properties.get(category=category, key=key).getValue(field_type)
-        except:
+            value = self.properties.get(category=category, key=key).getValue(field_type)
+            if decrypted and value is not None:
+                return DECRYPTER.decrypt(value)
+            return value
+        except Exception:
             pass
         return default
 
@@ -549,7 +549,7 @@ class RestModel(object):
     def safeSave(self, **kwargs):
         using = getattr(self.RestMeta, "DATABASE", None)
         if using:
-            using = cls.get_db_mapping(using)
+            using = self.get_db_mapping(using)
             return self.save(using=using, **kwargs)
         return self.save(**kwargs)
 

@@ -482,6 +482,11 @@ class ConsoleColors:
     UNDERLINE = "\033[4m"
 
 
+def pp(*args):
+    for arg in args:
+        prettyWrite(arg)
+
+
 def prettyWriteToString(d):
     output = StringIO()
     prettyWrite(d, output, colors=True)
