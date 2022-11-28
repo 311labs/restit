@@ -14,8 +14,8 @@ from django.conf import settings
 
 logger = getLogger()
 
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-VAR_FOLDER = os.path.join(ROOT, "var")
+ROOT = settings.ROOT
+VAR_FOLDER = settings.VAR_ROOT
 PID_FILE = os.path.join(VAR_FOLDER, "tq_worker.pid")
 ENGINE_CMD = os.path.join(ROOT, "bin", "tq_worker.py")
 
