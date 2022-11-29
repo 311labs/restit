@@ -15,7 +15,7 @@ from django.conf import settings
 logger = getLogger()
 
 PID_FILE = os.path.join(settings.VAR_ROOT, "tq_worker.pid")
-ENGINE_CMD = os.path.join(settings.BIN_ROOT, "bin", "tq_worker.py")
+ENGINE_CMD = os.path.join(settings.BIN_ROOT, "tq_worker.py")
 
 TQ_THREADS = getattr(settings, "TQ_THREADS", 4)
 TQ_SUBSCRIBE = getattr(settings, "TQ_SUBSCRIBE", [])
