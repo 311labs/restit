@@ -10,7 +10,7 @@ def rest_on_mailbox(request, pk=None):
     return mailbox.Message.on_rest_request(request, pk)
 
 
-@rd.urlGET(r'^mailbox/ses/incoming$')
+@rd.urlGET(r'^ses/incoming$')
 def rest_on_ses_incoming(request):
     msg = request.DATA.asUberDict()
     handler = SES_HANDLERS.get(msg.sns_type, None)
