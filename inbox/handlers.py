@@ -78,6 +78,7 @@ def on_email(request, msg):
         elif msg_atch.encoding == "quoted-printable":
             obj = mailtils.toFileObject(msg_atch)
             atch.saveMediaFile(obj, "media", msg_atch.name)
+        atch.save()
 
     # now lets find if a mailbox exists
     mailbox = Mailbox.objects.filter(email=to_email).last()
