@@ -70,13 +70,13 @@ def on_email(request, msg):
         from_name=msg_data.from_name)
     msg.save()
 
-    for attachment in msg_data.attachments:
-        a = Attachment(message=msg, name=attachment.name)
-        if a.encoding == "base64":
-            a.saveMediaFile(a.payload, "media", attachment.name)
-        elif a.encoding == "quoted-printable":
-            obj = mailtils.toFileObject(a)
-            a.saveMediaFile(obj, "media", attachment.name)
+    for msg_atch in msg_data.attachments:
+        atch = Attachment(message=msg, name=msg_atch.name)
+        if msg_atch.encoding == "base64":
+            atch.saveMediaFile(msg_atch.payload, "media", msg_atch.name)
+        elif msg_atch.encoding == "quoted-printable":
+            obj = mailtils.toFileObject(msg_atch)
+            atch.saveMediaFile(obj, "media", msg_atch.name)
     return rv.restStatus(request, True)
 
 

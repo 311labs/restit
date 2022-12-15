@@ -4,6 +4,7 @@ from django.core.exceptions import FieldDoesNotExist
 from hashids import Hashids
 import hashlib
 import string
+from io import StringIO
 
 from datetime import datetime, date, timedelta
 from decimal import Decimal
@@ -995,8 +996,11 @@ class RestModel(object):
         # make sure we set the name base64_data
         if is_base64:
             mi = MediaItem(name=file_name, base64_data=file, group=group)
-        elif type(file) in [str, str] and (file.startswith("https:") or file.startswith("http:")):
-            mi = MediaItem(name=file_name, downloadurl=file, group=group)
+        elif isinstance(file, str):
+            if file.startswith("https:") or file.startswith("http:"):
+                mi = MediaItem(name=file_name, downloadurl=file, group=group)
+            else:
+                mi = MediaItem(name=file_name, group=group, newfile=StringIO(file))
         else:
             mi = MediaItem(name=file_name, newfile=file, group=group)
         rest_helpers.log_print(F"saving media file: {name}")
