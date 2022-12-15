@@ -1,6 +1,6 @@
 from io import StringIO
 import email
-from email.utils import parseaddr, parsedate, getaddresses
+from email.utils import parseaddr, parsedate_to_datetime, getaddresses
 from email.header import decode_header
 
 from objict import objict
@@ -66,7 +66,7 @@ def parseRawMessage(msgobj):
             message.append(line.strip())
     message = "\n".join(message).strip()
     from_addr = parseaddr(msgobj.get('From'))
-    date_time = parsedate(msgobj.get('Date'))
+    date_time = parsedate_to_datetime(msgobj.get('Date'))
     return objict({
         'subject': subject.strip(),
         'body': body,
@@ -87,7 +87,7 @@ def parseAttachment(message_part):
     content_disposition = message_part.get("Content-Disposition", None)
     if content_disposition:
         dispositions = content_disposition.strip().split(";")
-        if bool(content_disposition and dispositions[0].lower() == "attachment"):
+        if dispositions[0] in ["attachment", "inline"]:
             file_data = message_part.get_payload(decode=True)
             # Used a StringIO object since PIL didn't seem to recognize
             # images using a custom file-like object
