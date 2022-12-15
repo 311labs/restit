@@ -39,6 +39,9 @@ class Bounce(models.Model, rm.RestModel):
     source = models.CharField(max_length=255, null=True, blank=True, default=None)
     source_ip = models.CharField(max_length=64, null=True, blank=True, default=None)
 
+    def __str__(self):
+        return f"bounce: address:{self.address} reason:{self.reason}"
+
     @staticmethod
     def log(kind, address, reason, reporter=None, code=None, source=None, source_ip=None, user=None):
         obj = Bounce(kind=kind, address=address)
