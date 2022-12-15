@@ -51,22 +51,22 @@ def on_complaint(request, msg):
 
 
 def on_email(request, msg):
-    # if data.content is None:
-    #     logger.error("message has no content", msg)
-    #     return rv.restStatus(request, False)
-    # msg_data = mailtils.parseRawMessage(data.content)
-    # logger.info("parsed", msg_data)
-    # msg = Message(
-    #     sent_at=msg_data.sent_at,
-    #     subject=msg_data.subject,
-    #     message=msg_data.message,
-    #     html=msg_data.html,
-    #     body=msg_data.body,
-    #     to=msg_data.to,
-    #     cc=msg_data.cc,
-    #     from_email=msg_data.from_email,
-    #     from_name=msg_data.from_name)
-    # msg.save()
+    if msg.content is None:
+        logger.error("message has no content", msg)
+        return rv.restStatus(request, False)
+    msg_data = mailtils.parseRawMessage(msg.content)
+    logger.info("parsed", msg_data)
+    msg = Message(
+        sent_at=msg_data.sent_at,
+        subject=msg_data.subject,
+        message=msg_data.message,
+        html=msg_data.html,
+        body=msg_data.body,
+        to=msg_data.to,
+        cc=msg_data.cc,
+        from_email=msg_data.from_email,
+        from_name=msg_data.from_name)
+    msg.save()
     return rv.restStatus(request, True)
 
 
