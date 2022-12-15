@@ -13,9 +13,9 @@ def rest_on_mailbox(request, pk=None):
 
 @rd.urlPOST(r'^ses/incoming$')
 def rest_on_ses_incoming(request):
-    msg = request.DATA.asUberDict()
-    rh.log_print("rest_on_ses_incoming", msg)
-    handler = SES_HANDLERS.get(msg.Type, None)
+    msg_type = request.DATA.get("Type")
+    handler = SES_HANDLERS.get(msg_type, None)
     if not handler:
+        rh.log_error("rest_on_ses_incoming", request.DATA.toDict())
         return rv.restStatus(request, False)
-    return handler(request, msg)
+    return handler(request)
