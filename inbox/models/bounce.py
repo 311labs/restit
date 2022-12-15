@@ -8,7 +8,7 @@ from account.models import Member
 from datetime import datetime, timedelta
 
 
-class BounceHistory(models.Model, rm.RestModel):
+class Bounce(models.Model, rm.RestModel):
     class RestMeta:
         CAN_SAVE = False
         SEARCH_FIELDS = ["address"]
@@ -30,7 +30,7 @@ class BounceHistory(models.Model, rm.RestModel):
             }
         }
     created = models.DateTimeField(auto_now_add=True, editable=False, db_index=True)
-    user = models.ForeignKey("account.Member", related_name="bounces", null=True, blank=True, default=None, on_delete=models.CASCADE)
+    user = models.ForeignKey("account.Member", related_name="emails_bounced", null=True, blank=True, default=None, on_delete=models.CASCADE)
     address = models.CharField(max_length=255, db_index=True)
     kind = models.CharField(max_length=32, db_index=True)
     reason = models.TextField(null=True, blank=True, default=None)
@@ -41,7 +41,7 @@ class BounceHistory(models.Model, rm.RestModel):
 
     @staticmethod
     def log(kind, address, reason, reporter=None, code=None, source=None, source_ip=None, user=None):
-        obj = BounceHistory(kind=kind, address=address)
+        obj = Bounce(kind=kind, address=address)
         obj.reason = reason
         obj.reporter = reporter
         obj.code = code
@@ -53,7 +53,7 @@ class BounceHistory(models.Model, rm.RestModel):
             if user:
                 user.log("bounced", "{} bounced to {} from {}".format(kind, address, source_ip), method=kind)
                 since = datetime.now() - timedelta(days=14)
-                bounce_count = BounceHistory.objects.filter(user=user, created__gte=since).count()
+                bounce_count = Bounce.objects.filter(user=user, created__gte=since).count()
                 if bounce_count > 2:
                     # TODO notify support an account has been disabled because of bounce
                     user.setProperty("notify_via", "off")

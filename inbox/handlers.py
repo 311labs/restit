@@ -1,7 +1,7 @@
 from rest import helpers as rh
 from rest import views as rv
 from rest.log import getLogger
-from .models import BounceHistory, Message
+from .models import Bounce, Complaint, Message
 from . import mailtils
 
 logger = getLogger("mailbox", filename="mailbox.log")
@@ -38,12 +38,28 @@ def on_bounce(request, msg):
         return rv.restStatus(request, True)
     for who in msg.bounce.bouncedRecipients:
         # kind, address, reason, reporter=None, code=None, source=None, source_ip=None, user=None
-        BounceHistory.log(
+        Bounce.log(
             kind="email",
             address=who.emailAddress,
             reason=who.diagnosticCode,
             reporter=msg.bounce.reportingMTA,
             code=who.status,
+            source=msg.mail.source,
+            source_ip=msg.mail.sourceIp)
+    return rv.restStatus(request, True)
+
+
+def on_complaint(request, msg):
+    if not msg.bounce or not isinstance(msg.bounce.bouncedRecipients, list):
+        logger.error("invalid bounce request")
+        return rv.restStatus(request, True)
+    for who in msg.complaint.complainedRecipients:
+        # kind, address, reason, reporter=None, code=None, source=None, source_ip=None, user=None
+        Complaint.log(
+            kind="email",
+            address=who.emailAddress,
+            reason=msg.complaint.complaintFeedbackType,
+            user_agent=msg.complaint.userAgent,
             source=msg.mail.source,
             source_ip=msg.mail.sourceIp)
     return rv.restStatus(request, True)
@@ -57,7 +73,8 @@ def on_unknown(request, msg):
 SES_HANDLERS = {
     "email": on_email,
     "SubscriptionConfirmation": on_subscriptionconfirmation,
-    "Bounce": on_bounce
+    "Bounce": on_bounce,
+    "Complaint": on_complaint
 }
 
 
