@@ -1,7 +1,8 @@
 from rest import helpers as rh
 from rest import views as rv
 from rest.log import getLogger
-from .models import Bounce, Complaint, Message, Attachment
+from taskqueue.models import Task
+from .models import Bounce, Complaint, Message, Attachment, Mailbox
 from . import mailtils
 import requests
 from objict import objict
@@ -77,6 +78,15 @@ def on_email(request, msg):
         elif msg_atch.encoding == "quoted-printable":
             obj = mailtils.toFileObject(msg_atch)
             atch.saveMediaFile(obj, "media", msg_atch.name)
+
+    # now lets find if a mailbox exists
+    mailbox = Mailbox.objects.filter(email=to_email).last()
+    if mailbox is not None:
+        Task.Publish(
+            mailbox.tq_app, mailbox.tq_handler,
+            data=dict(pk=msg.pk, to_email=to_email, from_email=msg.from_email),
+            channel=mailbox.tq_channel)
+
     return rv.restStatus(request, True)
 
 
