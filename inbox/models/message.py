@@ -27,7 +27,7 @@ class Message(models.Model, rm.RestModel):
     to_email = models.CharField(max_length=255, db_index=True)
     to_name = models.CharField(max_length=255, null=True, default=None)
     to = models.TextField()
-    cc = models.TextField()
+    cc = models.TextField(null=True, default=None)
 
     from_email = models.CharField(max_length=255, db_index=True)
     from_name = models.CharField(max_length=255, null=True, default=None)

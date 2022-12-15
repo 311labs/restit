@@ -103,13 +103,19 @@ def parseAttachment(message_part):
                 if name == "filename":
                     attachment.name = value
                 elif name in ["create-date", "creation-date"]:
-                    attachment.create_date = value  #TODO: datetime
+                    attachment.create_date = value
                 elif name == "modification-date":
-                    attachment.mod_date = value #TODO: datetime
+                    attachment.mod_date = value
                 elif name == "read-date":
-                    attachment.read_date = value #TODO: datetime
+                    attachment.read_date = value
             return attachment
     return None
+
+
+def toFileObject(attachment):
+    obj = StringIO(toString(attachment.payload))
+    obj.name = attachment.name
+    return obj
 
 
 def toString(value):

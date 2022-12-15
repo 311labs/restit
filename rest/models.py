@@ -996,9 +996,9 @@ class RestModel(object):
         if is_base64:
             mi = MediaItem(name=file_name, base64_data=file, group=group)
         elif type(file) in [str, str] and (file.startswith("https:") or file.startswith("http:")):
-            mi = MediaItem(name=name, downloadurl=file, group=group)
+            mi = MediaItem(name=file_name, downloadurl=file, group=group)
         else:
-            mi = MediaItem(name=name, newfile=file, group=group)
+            mi = MediaItem(name=file_name, newfile=file, group=group)
         rest_helpers.log_print(F"saving media file: {name}")
         mi.save()
         if is_local:

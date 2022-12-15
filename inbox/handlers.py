@@ -1,7 +1,7 @@
 from rest import helpers as rh
 from rest import views as rv
 from rest.log import getLogger
-from .models import Bounce, Complaint, Message
+from .models import Bounce, Complaint, Message, Attachment
 from . import mailtils
 import requests
 from objict import objict
@@ -69,6 +69,14 @@ def on_email(request, msg):
         from_email=msg_data.from_email,
         from_name=msg_data.from_name)
     msg.save()
+
+    for attachment in msg_data.attachments:
+        a = Attachment(message=msg, name=attachment.name)
+        if a.encoding == "base64":
+            a.saveMediaFile(a.payload, "media", attachment.name)
+        elif a.encoding == "quoted-printable":
+            obj = mailtils.toFileObject(a)
+            a.saveMediaFile(obj, "media", attachment.name)
     return rv.restStatus(request, True)
 
 
