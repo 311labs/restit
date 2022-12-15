@@ -15,7 +15,7 @@ def rest_on_mailbox(request, pk=None):
 def rest_on_ses_incoming(request):
     msg = request.DATA.asUberDict()
     rh.log_print("rest_on_ses_incoming", msg)
-    handler = SES_HANDLERS.get(msg.sns_type, None)
+    handler = SES_HANDLERS.get(msg.Type, None)
     if not handler:
         return rv.restStatus(request, False)
     return handler(request, msg)

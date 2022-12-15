@@ -37,8 +37,6 @@ class RequestData(object):
             self.parseJSON()
         else:
             self.__data = self.params
-        if self.request.is_sns:
-            self.parseSNS()
         if self.__data is None:
             self.__data = {}
 
@@ -62,32 +60,6 @@ class RequestData(object):
         except Exception:
             pass
         return data
-
-    def parseSNS(self):
-        self.request.sns_type = self.get("type")
-        self.request.sns_subject = self.get("subject")
-        self.request.sns_topic = self.get("topicarn")
-        self.request.sns_id = self.get("messageid")
-        self.request.sns_signature = self.get("signature")
-        # this should just be notification type "Received"
-        if self.request.sns_subject and "Email Receipt" in self.request.sns_subject:
-            data = self.get("message")
-            if data:
-                try:
-                    self.__data = self.normalizeData(json.loads(data))
-                    self.request.sns_type = "email"
-                except Exception as err:
-                    print("sns msg error")
-                    print(data)
-        elif self.request.sns_type == "Notification":
-            data = self.get("message")
-            if data:
-                try:
-                    self.__data = self.normalizeData(json.loads(data))
-                    self.request.sns_type = self.get("notificationtype", self.request.sns_type)
-                except Exception as err:
-                    print("sns msg error")
-                    print(data)
 
     def parsePARAMS(self):
         if self.request.method == "POST":

@@ -29,6 +29,7 @@ def on_email(request, data):
 
 
 def on_subscriptionconfirmation(request, msg):
+    rh.log_print("subcribed to", msg)
     return rv.restStatus(request, True)
 
 
