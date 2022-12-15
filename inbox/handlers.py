@@ -73,7 +73,7 @@ def on_email(request, msg):
     for msg_atch in msg_data.attachments:
         atch = Attachment(message=msg, name=msg_atch.name)
         if msg_atch.encoding == "base64":
-            atch.saveMediaFile(msg_atch.payload, "media", msg_atch.name)
+            atch.saveMediaFile(msg_atch.payload, "media", msg_atch.name, is_base64=True)
         elif msg_atch.encoding == "quoted-printable":
             obj = mailtils.toFileObject(msg_atch)
             atch.saveMediaFile(obj, "media", msg_atch.name)

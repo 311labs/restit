@@ -1000,7 +1000,9 @@ class RestModel(object):
             if file.startswith("https:") or file.startswith("http:"):
                 mi = MediaItem(name=file_name, downloadurl=file, group=group)
             else:
-                mi = MediaItem(name=file_name, group=group, newfile=StringIO(file))
+                file = StringIO(file)
+                file.name = file_name
+                mi = MediaItem(name=file_name, group=group, newfile=file)
         else:
             mi = MediaItem(name=file_name, newfile=file, group=group)
         rest_helpers.log_print(F"saving media file: {name}")
