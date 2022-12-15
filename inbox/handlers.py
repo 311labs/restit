@@ -4,7 +4,7 @@ from rest.log import getLogger
 from .models import Bounce, Complaint, Message
 from . import mailtils
 
-logger = getLogger("mailbox", filename="mailbox.log")
+logger = getLogger("inbox", filename="inbox.log")
 
 
 def on_email(request, data):
