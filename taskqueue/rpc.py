@@ -97,28 +97,36 @@ def rest_on_task_status(request):
         out.last_scheduled = last_scheduled.created
     stale = datetime.now() - timedelta(minutes=request.DATA.get("minutes_back", 60))
     qset = tq.Task.objects.filter(modified__gte=stale)
-    out.total = qset.count()
-    out.running = qset.filter(state=tq.TASK_STATE_STARTED).count()
-    out.backlog = qset.filter(state=tq.TASK_STATE_SCHEDULED).count()
-    out.completed = qset.filter(state=tq.TASK_STATE_COMPLETED).count()
-    out.failed = qset.filter(state=tq.TASK_STATE_FAILED).count()
-    out.retry = qset.filter(state=tq.TASK_STATE_RETRY).count()
+    status = qset.aggregate(
+        retry=Count('state', filter=Q(state=tq.TASK_STATE_RETRY)),
+        completed=Count('state', filter=Q(state=tq.TASK_STATE_COMPLETED)),
+        failed=Count('state', filter=Q(state=tq.TASK_STATE_FAILED)),
+        running=Count('state', filter=Q(state=tq.TASK_STATE_STARTED)),
+        backlog=Count('state', filter=Q(state=tq.TASK_STATE_SCHEDULED)))
+    status["total"] = qset.count()
+    out.update(status)
     return rv.restGet(request, out)
 
 
 @rd.url(r'^task/stats$')
 def rest_on_stats(request):
-    when = datetime.now() - timedelta(days=7)
-    report = (tq.Task.objects.filter(
+    when = datetime.now() - timedelta(days=request.DATA.get("days", 7, field_type=int))
+    qset = tq.Task.objects.filter(
         created__gte=when)
+    report = (
+        qset
         .annotate(day=Trunc('created', 'day'))
         .values('day')
-        .annotate(running=Count('state', filter=Q(state=tq.TASK_STATE_STARTED)))
-        .annotate(backlog=Count('state', filter=Q(state=tq.TASK_STATE_SCHEDULED)))
         .annotate(completed=Count('state', filter=Q(state=10)))
         .annotate(failed=Count('state', filter=Q(state=-1)))
         .annotate(longest=Max('runtime')))
-    return rv.restGet(request, dict(stats=list(report)))
+    status = qset.aggregate(
+        retry=Count('state', filter=Q(state=tq.TASK_STATE_RETRY)),
+        completed=Count('state', filter=Q(state=tq.TASK_STATE_COMPLETED)),
+        failed=Count('state', filter=Q(state=tq.TASK_STATE_FAILED)),
+        running=Count('state', filter=Q(state=tq.TASK_STATE_STARTED)),
+        backlog=Count('state', filter=Q(state=tq.TASK_STATE_SCHEDULED)))
+    return rv.restGet(request, dict(stats=list(report), status=status))
 
 
 @rd.url(r'^test/webrequest$')
