@@ -1,5 +1,6 @@
 from rest import decorators as rd
 from rest import views as rv
+from rest import helpers as rh
 from . import models as mailbox
 from .handlers import SES_HANDLERS
 
@@ -13,6 +14,7 @@ def rest_on_mailbox(request, pk=None):
 @rd.urlPOST(r'^ses/incoming$')
 def rest_on_ses_incoming(request):
     msg = request.DATA.asUberDict()
+    rh.log_print("rest_on_ses_incoming", msg)
     handler = SES_HANDLERS.get(msg.sns_type, None)
     if not handler:
         return rv.restStatus(request, False)
