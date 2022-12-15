@@ -11,7 +11,7 @@ logger = getLogger("inbox", filename="inbox.log")
 
 
 def on_subscriptionconfirmation(request):
-    rh.log_print("subcribed to", request.DATA.asDict())
+    logger.info("subcribed to", request.DATA.asDict())
     url = request.DATA.get("SubscribeURL", None)
     resp = requests.get(url)
     return rv.restStatus(request, True)
@@ -82,12 +82,15 @@ def on_email(request, msg):
 
 def on_notification(request):
     msg = objict.fromJSON(request.DATA.get("Message", ""))
-    rh.log_print("on_notification", msg)
     handler = SES_HANDLERS.get(msg.notificationType, None)
     if handler is None:
-        rh.log_error(f"no handler for {msg.notificationType}")
+        logger.error(f"no handler for {msg.notificationType}")
         return rv.restStatus(request, False)
-    return handler(request, msg)
+    try:
+        return handler(request, msg)
+    except Exception:
+        logger.exception()
+    return rv.restStatus(request, False)
 
 
 def on_unknown(request):
