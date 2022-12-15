@@ -113,6 +113,8 @@ def rest_on_stats(request):
         created__gte=when)
         .annotate(day=Trunc('created', 'day'))
         .values('day')
+        .annotate(running=Count('state', filter=Q(state=tq.TASK_STATE_STARTED)))
+        .annotate(backlog=Count('state', filter=Q(state=tq.TASK_STATE_SCHEDULED)))
         .annotate(completed=Count('state', filter=Q(state=10)))
         .annotate(failed=Count('state', filter=Q(state=-1)))
         .annotate(longest=Max('runtime')))
