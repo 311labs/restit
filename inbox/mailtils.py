@@ -88,12 +88,10 @@ def parseAttachment(message_part):
     if content_disposition:
         dispositions = content_disposition.strip().split(";")
         if dispositions[0] in ["attachment", "inline"]:
-            file_data = message_part.get_payload(decode=True)
-            # Used a StringIO object since PIL didn't seem to recognize
-            # images using a custom file-like object
-            attachment = StringIO(toString(file_data))
+            attachment = objict()
+            attachment.payload = message_part.get_payload(decode=False)
             attachment.content_type = message_part.get_content_type()
-            attachment.size = len(file_data)
+            attachment.encoding = message_part.get("Content-Transfer-Encoding", "utf8")
             attachment.name = None
             attachment.create_date = None
             attachment.mod_date = None
