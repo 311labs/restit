@@ -115,6 +115,7 @@ def parseAttachment(message_part):
 def toFileObject(attachment):
     obj = StringIO(toString(attachment.payload))
     obj.name = attachment.name
+    obj.size = len(attachment.payload)
     return obj
 
 

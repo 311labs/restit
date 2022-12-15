@@ -1001,6 +1001,7 @@ class RestModel(object):
                 mi = MediaItem(name=file_name, downloadurl=file, group=group)
             else:
                 file = StringIO(file)
+                file.size = len(file)
                 file.name = file_name
                 mi = MediaItem(name=file_name, group=group, newfile=file)
         else:
