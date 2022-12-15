@@ -3,6 +3,7 @@ from rest import views as rv
 from rest.log import getLogger
 from .models import Bounce, Complaint, Message
 from . import mailtils
+import requests
 
 logger = getLogger("inbox", filename="inbox.log")
 
@@ -30,6 +31,8 @@ def on_email(request, data):
 
 def on_subscriptionconfirmation(request, msg):
     rh.log_print("subcribed to", msg)
+    url = msg.SubscribeURL
+    resp = requests.get(url)
     return rv.restStatus(request, True)
 
 
