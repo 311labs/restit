@@ -6,11 +6,13 @@ from rest.uberdict import UberDict
 from datetime import datetime, timedelta
 from .models import *
 
+
 @url(r'^task$')
 @url(r'^task/(?P<pk>\d+)$')
 @login_required
 def rest_on_task(request, pk=None):
     return Task.on_rest_request(request, pk)
+
 
 @url(r'^task/log$')
 @url(r'^task/log/(?P<pk>\d+)$')
@@ -18,11 +20,13 @@ def rest_on_task(request, pk=None):
 def rest_on_tasklog(request, pk=None):
     return TaskLog.on_rest_request(request, pk)
 
+
 @url(r'^task/schedule$')
 @url(r'^task/schedule/(?P<pk>\d+)$')
 @login_required
 def rest_on_tasklog(request, pk=None):
     return ScheduledTask.on_rest_request(request, pk)
+
 
 @urlPOST(r'^task/publish$')
 @perm_required("manage_staff")
@@ -35,11 +39,13 @@ def rest_on_task_publish(request, pk=None):
     task = Task.Publish(app, module, task_data)
     return restGet(request, task, **Task.getGraph("default"))
 
+
 @url(r'^task/hook$')
 @url(r'^task/hook/(?P<pk>\d+)$')
 @login_required
 def rest_on_tasklog(request, pk=None):
     return TaskHook.on_rest_request(request, pk)
+
 
 @url(r'^task/hook/test$')
 @perm_required("manage_hooks")
@@ -61,6 +67,7 @@ def rest_on_task_hook_test(request):
         task = hook.trigger(data, when)
     return restGet(request, task, **Task.getGraph("default"))
 
+
 @url(r'^restart$')
 @perm_required("manage_staff")
 def rest_on_restart(request):
@@ -68,11 +75,13 @@ def rest_on_restart(request):
     Task.RestartEngine()
     return restStatus(request, True)
 
+
 @url(r'^test$')
 @perm_required("manage_staff")
 def rest_on_restart(request):
     Task.PublishTest(request.DATA.get("test_count", 1, field_type=int), request.DATA.get("sleep_time", 10.0, field_type=float))
     return restStatus(request, True)
+
 
 @url(r'^task/status$')
 def rest_on_task_status(request):
@@ -92,6 +101,19 @@ def rest_on_task_status(request):
     out.failed = qset.filter(state=TASK_STATE_FAILED).count()
     out.retry = qset.filter(state=TASK_STATE_RETRY).count()
     return restGet(request, out)
+
+
+@url(r'^task/stats$')
+def rest_on_stats(request):
+    when = datetime.now() - timedelta(days=7)
+    report = (Task.objects.filter(
+        created__gte=when)
+        .annotate(day=Trunc('created', 'day'))
+        .values('day')
+        .annotate(completed=Count('state', filter=Q(state=10)))
+        .annotate(failed=Count('state', filter=Q(state=-1)))
+        .annotate(longest=Max('runtime')))
+    return restGet(request, dict(stats=list(report)))
 
 
 @url(r'^test/webrequest$')

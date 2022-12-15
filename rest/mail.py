@@ -22,6 +22,7 @@ SES_ACCESS_KEY = getattr(settings, "SES_ACCESS_KEY", None)
 SES_SECRET_KEY = getattr(settings, "SES_SECRET_KEY", None)
 SES_REGION = getattr(settings, "SES_REGION", None)
 
+import metrics
 from rest.uberdict import UberDict
 from rest.middleware import get_request
 from rest.log import getLogger
@@ -57,14 +58,16 @@ def send(to, subject, body=None, attachments=[], from_email=settings.DEFAULT_FRO
         t = threading.Thread(target=sendMail, args=[msg, from_email, to])
         t.start()
 
+
 def sendToSupport(subject, body=None, attachments=[], from_email=settings.DEFAULT_FROM_EMAIL,
     fail_silently=True, template="email/base.html", context=None, do_async=True):
     send(settings.ADMIN_NOTIFY_USERS, subject, body=body, attachments=attachments,
         from_email=from_email, fail_silently=fail_silently, template=template, context=context, do_async=do_async)
 
+
 def render_to_mail(name, context):
     try:
-        _renderToMail(name, context)
+        render_to_mail(name, context)
     except Exception as err:
         EMAIL_LOGGER.exception(err)
         EMAIL_LOGGER.error("email '{}' failed".format(name), context)
@@ -88,7 +91,9 @@ def sendMail(msg, sender, recipients):
             Destinations=recipients,
             RawMessage={'Data': msg.as_string()}
         )
+        metrics.metric("emails_sent", category="email", min_granularity="hourly")
     except Exception as err:
+        metrics.metric("email_errors", category="email", min_granularity="hourly")
         EMAIL_LOGGER.exception(err)
         EMAIL_LOGGER.error(msg.as_string())
 
