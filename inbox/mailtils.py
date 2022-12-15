@@ -75,8 +75,10 @@ def parseRawMessage(msgobj):
         'html': html,
         'from_email': from_addr[1],
         'from_name': from_addr[0],
-        'to': getaddresses(msgobj.get_all("To", [])),
-        'cc': getaddresses(msgobj.get_all("Cc", [])),
+        'to': msgobj.get("To"),
+        'to_addrs': getaddresses(msgobj.get_all("To", [])),
+        'cc': msgobj.get("Cc"),
+        'cc_addrs': getaddresses(msgobj.get_all("Cc", [])),
         'attachments': attachments,
     })
 

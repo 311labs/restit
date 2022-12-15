@@ -54,9 +54,11 @@ def on_email(request, msg):
     if msg.content is None:
         logger.error("message has no content", msg)
         return rv.restStatus(request, False)
+    to_email = msg.receipt.recipients[0]
     msg_data = mailtils.parseRawMessage(msg.content)
     logger.info("parsed", msg_data)
     msg = Message(
+        to_email=to_email,
         sent_at=msg_data.sent_at,
         subject=msg_data.subject,
         message=msg_data.message,
