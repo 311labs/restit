@@ -2,10 +2,15 @@ from django.db import models
 
 from rest import models as rm
 from rest import log
+from rest import settings
+import metrics
 
 from datetime import datetime, timedelta
 from .incident import Incident
 from .rules import Rule
+
+INCIDENT_METRICS = settings.get("INCIDENT_METRICS", False)
+
 
 logger = log.getLogger("incident", filename="incident.log")
 
@@ -108,6 +113,8 @@ class Event(models.Model, rm.RestModel, rm.MetaDataModel):
             incident.save()
         self.incident = incident
         self.save()
+        if INCIDENT_METRICS:
+            metrics.metric("incidents", category="incidents", min_granularity="hourly")
         # fire this off so incident notifies
         incident.on_rest_saved(request, is_new=is_incident_new)
         

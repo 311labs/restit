@@ -28,7 +28,8 @@ def ossec_alert_creat_from_request(request):
                 elif od.level <= 3:
                     level = 8
                 metadata = od.toDict(graph="default")
-                metadata.country = od.geoip.country
+                if od.geoip:
+                    metadata["country"] = od.geoip.country
                 am.Event.createFromDict(None, {
                     "hostname": od.hostname,
                     "description": od.title,
