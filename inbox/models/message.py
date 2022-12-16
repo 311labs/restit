@@ -3,6 +3,9 @@ from rest import models as rm
 
 
 class Mailbox(models.Model, rm.RestModel, rm.MetaDataModel):
+    class RestMeta:
+        DEFAULT_SORT = "-id"
+
     created = models.DateTimeField(auto_now_add=True, editable=False, db_index=True)
     modified = models.DateTimeField(auto_now=True)
     email = models.CharField(max_length=255, db_index=True)
@@ -21,6 +24,10 @@ class MailboxMetaData(rm.MetaDataBase):
 
 
 class Message(models.Model, rm.RestModel):
+    class RestMeta:
+        CAN_SAVE = CAN_CREATE = False
+        DEFAULT_SORT = "-id"
+
     created = models.DateTimeField(auto_now_add=True, editable=False, db_index=True)
     modified = models.DateTimeField(auto_now=True)
     sent_at = models.DateTimeField()
@@ -46,6 +53,10 @@ class Message(models.Model, rm.RestModel):
 
 
 class Attachment(models.Model, rm.RestModel):
+    class RestMeta:
+        CAN_SAVE = CAN_CREATE = False
+        DEFAULT_SORT = "-id"
+
     created = models.DateTimeField(auto_now_add=True, editable=False, db_index=True)
     name = models.CharField(max_length=255, null=True, default=None)
     message = models.ForeignKey(Message, related_name="attachments", on_delete=models.CASCADE)

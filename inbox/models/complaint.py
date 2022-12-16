@@ -10,7 +10,8 @@ from datetime import datetime, timedelta
 
 class Complaint(models.Model, rm.RestModel):
     class RestMeta:
-        CAN_SAVE = False
+        CAN_SAVE = CAN_CREATE = False
+        DEFAULT_SORT = "-id"
         SEARCH_FIELDS = ["address"]
         SEARCH_TERMS = [
             ("email", "address"),
