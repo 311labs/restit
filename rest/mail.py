@@ -4,6 +4,7 @@ import threading
 from io import StringIO
 import csv
 import mimetypes
+import boto3
 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -17,28 +18,24 @@ except Exception:
 from django.template.loader import render_to_string
 from django.template import TemplateDoesNotExist
 from django.conf import settings
+
+import metrics
+from rest.uberdict import UberDict
+from rest.middleware import get_request
+from rest.log import getLogger
+
+EMAIL_LOGGER = getLogger("email", filename="email.log")
 # ses settings
 SES_ACCESS_KEY = getattr(settings, "SES_ACCESS_KEY", None)
 SES_SECRET_KEY = getattr(settings, "SES_SECRET_KEY", None)
 SES_REGION = getattr(settings, "SES_REGION", None)
 EMAIL_METRICS = getattr(settings, "EMAIL_METRICS", False)
 
-import metrics
-from rest.uberdict import UberDict
-from rest.middleware import get_request
-from rest.log import getLogger
-EMAIL_LOGGER = getLogger("email", filename="email.log")
 
-try:
-    import boto3
-except Exception as err:
-    boto3 = None
-    EMAIL_LOGGER.error("missing boto3 module")
-
-#BEGIN PUBLIC API
-
-def send(to, subject, body=None, attachments=[], from_email=settings.DEFAULT_FROM_EMAIL,
-    fail_silently=True, template=None, context=None, do_async=False, replyto=None):
+def send(to, subject, body=None, attachments=[], 
+         from_email=settings.DEFAULT_FROM_EMAIL,
+         fail_silently=True, template=None, 
+         context=None, do_async=False, replyto=None):
     # make sure to is list
     if not isinstance(to, (tuple, list)):
         to = [to]
@@ -51,63 +48,39 @@ def send(to, subject, body=None, attachments=[], from_email=settings.DEFAULT_FRO
 
     if template:
         html = renderBody(html, template, context)
-    msg = create_multipart_message(settings.DEFAULT_FROM_EMAIL, to, subject, text=text, html=html, attachments=attachments, replyto=replyto)
+
+    msg = createMultiPartMessage(
+        settings.DEFAULT_FROM_EMAIL, to, subject,
+        text=text, html=html, attachments=attachments,
+        replyto=replyto)
+
     # send now or async
     if not do_async:
-        sendMail(msg, from_email, to)
+        return sendMail(msg, from_email, to, fail_silently=fail_silently)
     else:
         t = threading.Thread(target=sendMail, args=[msg, from_email, to])
         t.start()
+    return True
 
 
-def sendToSupport(subject, body=None, attachments=[], from_email=settings.DEFAULT_FROM_EMAIL,
-    fail_silently=True, template="email/base.html", context=None, do_async=True):
-    send(settings.ADMIN_NOTIFY_USERS, subject, body=body, attachments=attachments,
-        from_email=from_email, fail_silently=fail_silently, template=template, context=context, do_async=do_async)
+def renderBody(body, template=None, context=None):
+    if template and body and not context:
+        context = {
+            "body": body
+        }
+
+    if template and context:
+        if isinstance(context, dict):
+            context['settings'] = settings
+        if template[-4:] not in ["html", ".txt"]:
+            template += ".html"
+        body = render_to_string(template, context)
+        if inline_css:
+            body = inline_css(body)
+    return body
 
 
-def render_to_mail(name, context):
-    try:
-        render_to_mail(name, context)
-    except Exception as err:
-        EMAIL_LOGGER.exception(err)
-        EMAIL_LOGGER.error("email '{}' failed".format(name), context)
-
-def makeAttachment(filename, data):
-    atment = UberDict(name=filename, data=data)
-    atment.mimetype, junk = mimetypes.MimeTypes().guess_type(filename)
-    return atment
-
-# END PUBLIC API
-
-
-
-
-
-def sendMail(msg, sender, recipients):
-    try:
-        ses_client = getSES(SES_ACCESS_KEY, SES_SECRET_KEY, SES_REGION)
-        resp = ses_client.send_raw_email(
-            Source=sender,
-            Destinations=recipients,
-            RawMessage={'Data': msg.as_string()}
-        )
-        if EMAIL_METRICS:
-            metrics.metric("emails_sent", category="email", min_granularity="hourly")
-    except Exception as err:
-        if EMAIL_METRICS:
-            metrics.metric("email_errors", category="email", min_granularity="hourly")
-        EMAIL_LOGGER.exception(err)
-        EMAIL_LOGGER.error(msg.as_string())
-
-
-def getSES(access_key, secret_key, region):
-    return boto3.client('ses',
-        aws_access_key_id=access_key,
-        aws_secret_access_key=secret_key,
-        region_name=region)
-
-def create_multipart_message(sender, recipients, subject, text, html, attachments, replyto):
+def createMultiPartMessage(sender, recipients, subject, text, html, attachments, replyto):
     """
     Creates a MIME multipart message object.
     Uses only the Python `email` standard library.
@@ -154,21 +127,41 @@ def create_multipart_message(sender, recipients, subject, text, html, attachment
         msg.attach(part)
     return msg
 
-def renderBody(body, template=None, context=None):
-    if template and body and not context:
-        context = {
-            "body":body
-        }
 
-    if template and context:
-        if isinstance(context, dict):
-            context['settings'] = settings
-        if template[-4:] not in ["html", ".txt"]:
-            template += ".html"
-        body = render_to_string(template, context)
-        if inline_css:
-            body = inline_css(body)
-    return body
+def sendMail(msg, sender, recipients, fail_silently=True):
+    try:
+        ses_client = getSES(SES_ACCESS_KEY, SES_SECRET_KEY, SES_REGION)
+        ses_client.send_raw_email(
+            Source=sender,
+            Destinations=recipients,
+            RawMessage={'Data': msg.as_string()}
+        )
+        if EMAIL_METRICS:
+            metrics.metric("emails_sent", category="email", min_granularity="hourly")
+        return True
+    except Exception as err:
+        if EMAIL_METRICS:
+            metrics.metric("email_errors", category="email", min_granularity="hourly")
+        EMAIL_LOGGER.exception(err)
+        EMAIL_LOGGER.error(msg.as_string())
+        if not fail_silently:
+            raise err
+    return False
+
+
+def makeAttachment(filename, data):
+    atment = UberDict(name=filename, data=data)
+    atment.mimetype, junk = mimetypes.MimeTypes().guess_type(filename)
+    return atment
+
+
+def getSES(access_key, secret_key, region):
+    return boto3.client(
+        'ses',
+        aws_access_key_id=access_key,
+        aws_secret_access_key=secret_key,
+        region_name=region)
+
 
 def generateCSV(qset, fields, name):
     a = UberDict()
@@ -184,6 +177,7 @@ def generateCSV(qset, fields, name):
     a.mimetype = "text/csv"
     return a
 
+
 def render_to_mail(name, context):
     if not context.get("request"):
         context["request"] = get_request()
@@ -196,7 +190,7 @@ def render_to_mail(name, context):
     else:
         try:
             toaddrs = render_to_string(name + ".to", context).splitlines()
-        except TemplateDoesNotExist as err:
+        except TemplateDoesNotExist:
             return
     try:
         while True:
@@ -211,15 +205,15 @@ def render_to_mail(name, context):
         html_content = render_to_string(name + ".html", context)
         if inline_css:
             html_content = inline_css(html_content)
-    except TemplateDoesNotExist as err:
+    except TemplateDoesNotExist:
         html_content = None
         pass
 
     text_content = ""
     try:
         text_content = render_to_string(name + ".txt", context)
-    except TemplateDoesNotExist as error:
-        if html_content == None:
+    except TemplateDoesNotExist:
+        if html_content is not None:
             raise TemplateDoesNotExist("requires at least one content template")
 
     if 'from' in context:
@@ -236,7 +230,7 @@ def render_to_mail(name, context):
         try:
             subject = render_to_string(name + ".subject", context).rstrip()
         except TemplateDoesNotExist:
-            logging.getLogger("app").error("Sending email without subject: %s" % name)
+            EMAIL_LOGGER.error("Sending email without subject: %s" % name)
             return False
     replyto = None
     if "replyto" in context:

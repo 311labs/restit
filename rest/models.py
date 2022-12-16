@@ -1790,7 +1790,6 @@ class RestModel(object):
                 value = rest_helpers.parseDateTime(value)
             q[key] = value
         if bool(q):
-            rest_helpers.log_error("queryFromRequest", q)
             qset = qset.filter(**q)
         return qset
 

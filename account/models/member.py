@@ -486,9 +486,11 @@ class Member(User, RestModel, MetaDataModel):
         return True
 
     def sendEmail(self, subject, body, attachments=[], do_async=True, template=None, context=None):
-        rest_mail.send(
-            self.email, subject, body, attachments=attachments,
-            do_async=do_async, template=template, context=context)
+        NotificationRecord = RestModel.getModel("account", "NotificationRecord")
+        NotificationRecord.notify(
+            [self], subject=subject, message=body,
+            template=template, context=context,
+            email_only=True, attachments=attachments)
 
     def sendInvite(self, subject, group=None, url=None, msg=None, **kwargs):
         context = rest_helpers.getContext(

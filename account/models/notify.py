@@ -7,6 +7,7 @@ from rest import mail as rest_mail
 from .member import Member
 
 from datetime import datetime, timedelta
+import threading
 
 
 class NotificationRecord(models.Model, RestModel):
@@ -51,29 +52,33 @@ class NotificationRecord(models.Model, RestModel):
                 r.notification = self
                 r.save()
         if NotificationRecord.canSend():
-            try:
-                rest_mail.send(
-                    email_to,
-                    self.subject,
-                    self.body,
-                    attachments=self.attachments.all(),
-                    do_async=True
-                )
-                # self.reason = "sent"
-                self.state = 1
-            except Exception as err:
-                self.reason = str(err)
-                self.attempts += 1
-                if self.attempts >= 3:
-                    self.state = -10
-                else:
-                    self.state = -5
-            self.save()
+            t = threading.Thread(target=self.sendNow, args=[email_to])
+            t.start()
             return True
         if self.state != -5:
             self.state = -5
             self.save()
         return False
+
+    def sendNow(self, email_to):
+        try:
+            rest_mail.send(
+                email_to,
+                self.subject,
+                self.body,
+                attachments=self.attachments.all(),
+                fail_silently=False)
+            # self.reason = "sent"
+            self.state = 1
+        except Exception as err:
+            self.reason = str(err)
+            self.attempts += 1
+            if self.attempts >= 3:
+                self.state = -10
+            else:
+                self.state = -5
+        self.save()
+        return True 
 
     def attach(self, name, mimetype, data):
         atmnt = NotificationAttachment(notification=self, name=name, mimetype=mimetype, data=data)
