@@ -21,6 +21,7 @@ from django.conf import settings
 SES_ACCESS_KEY = getattr(settings, "SES_ACCESS_KEY", None)
 SES_SECRET_KEY = getattr(settings, "SES_SECRET_KEY", None)
 SES_REGION = getattr(settings, "SES_REGION", None)
+EMAIL_METRICS = getattr(settings, "EMAIL_METRICS", False)
 
 import metrics
 from rest.uberdict import UberDict
@@ -91,9 +92,11 @@ def sendMail(msg, sender, recipients):
             Destinations=recipients,
             RawMessage={'Data': msg.as_string()}
         )
-        metrics.metric("emails_sent", category="email", min_granularity="hourly")
+        if EMAIL_METRICS:
+            metrics.metric("emails_sent", category="email", min_granularity="hourly")
     except Exception as err:
-        metrics.metric("email_errors", category="email", min_granularity="hourly")
+        if EMAIL_METRICS:
+            metrics.metric("email_errors", category="email", min_granularity="hourly")
         EMAIL_LOGGER.exception(err)
         EMAIL_LOGGER.error(msg.as_string())
 
