@@ -10,6 +10,7 @@ from .incident import Incident
 from .rules import Rule
 
 INCIDENT_METRICS = settings.get("INCIDENT_METRICS", False)
+INCIDENT_EVENT_METRICS = settings.get("INCIDENT_EVENT_METRICS", False)
 
 
 logger = log.getLogger("incident", filename="incident.log")
@@ -78,6 +79,11 @@ class Event(models.Model, rm.RestModel, rm.MetaDataModel):
         return None
 
     def on_rest_saved(self, request, is_new=False):
+        if INCIDENT_EVENT_METRICS:
+            if self.hostname:
+                metrics.metric(f"incident_evt_{self.hostname}", category="incident_events", min_granularity="hourly")
+            metrics.metric("incident_evt", category="incident_events", min_granularity="hourly")
+
         self.setProperty("level", self.level)
         if request is not None:
             self.reporter_ip = request.ip
@@ -114,6 +120,8 @@ class Event(models.Model, rm.RestModel, rm.MetaDataModel):
         self.incident = incident
         self.save()
         if INCIDENT_METRICS:
+            if self.hostname:
+                metrics.metric(f"incidents_{self.hostname}", category="incidents", min_granularity="hourly")
             metrics.metric("incidents", category="incidents", min_granularity="hourly")
         # fire this off so incident notifies
         incident.on_rest_saved(request, is_new=is_incident_new)

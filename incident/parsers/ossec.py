@@ -77,33 +77,26 @@ def parseAlert(request, data):
         if m and m.groups():
             action = m.group(1)
             alert.title = "File Changed: {}".format(action)
-    elif irule == 100010:
+    elif irule == 5715:
+        m = re.search(r"Accepted publickey for (\S+).*ssh2: ([^\n\r]*)", data.text)
+        if m and m.groups():
+            ssh_sig = m.group(2)
+            if " " in ssh_sig:
+                kind, ssh_sig = ssh_sig.split(' ')
+            alert.username = m.group(1)
+            alert.ssh_sig = ssh_sig
+            alert.ssh_king = kind
+            alert.title = f"SSH LOGIN:{alert.username}@{alert.hostname} - {ssh_sig}"
+            # member = findUserBySshSig(ssh_sig)
+            # if member:
+            #     alert.title = "SSH LOGIN user: {}".format(member.username)
+    elif irule == 5501:
         # pam_unix(sshd:session): session opened for user git by (uid=0)
         m = re.search(r"session (\S+) for user (\S+)*", data.text)
         if m and m.groups():
-            action = m.group(1)
+            alert.action = m.group(1)
             alert.username = m.group(2)
-            alert.title = "session {} for user {}".format(action, alert.username)
-        # else:
-        #     m = re.search("Accepted publickey for (\S+).*ssh2: ([^\n\r]*)", data.text)
-        #     if m and m.groups():
-        #         ssh_sig = m.group(2)
-        #         if " " in ssh_sig:
-        #             kind, ssh_sig = ssh_sig.split(' ')
-        #         alert.username = m.group(1)
-        #         if ssh_sig == PAYAUTH_TERMINAL_SSH_SIG:
-        #             alert.title = "Terminal Remote SSH Tunnel Opened"
-        #             log = findTunnelLog()
-        #             if log:
-        #                 alert.title  = "Terminal Remote SSH {} by {}".format(log.tid, log.user.username)
-        #         else:
-        #             alert.title = "SSH LOGIN: {}".format(ssh_sig)
-        #             member = findUserBySshSig(ssh_sig)
-        #             if member:
-        #                 alert.title = "SSH LOGIN payauth:user: {}".format(member.username)
-        # we ignore git sessions for gitlabs
-        if data.hostname == "gitlabs":
-            return None
+            alert.title = f"session {alert.action} for user {alert.username}"
     elif irule == 5402:
         # TTY=pts/0 ; PWD=/opt/mm_protector ; USER=root ; COMMAND=/sbin/iptables -F
         m = re.search(r"sudo:\s*(\S+).*COMMAND=([^\n\r]*)", data.text)
