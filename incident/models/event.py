@@ -34,7 +34,15 @@ class Event(models.Model, rm.RestModel, rm.MetaDataModel):
                     "group": "basic",
                     "created_by": "basic"
                 },
-            }
+            },
+            "detailed": {
+                "extra": ["metadata"],
+                "graphs": {
+                    "group": "basic",
+                    "created_by": "basic",
+                    "generic__component": "basic",
+                },
+            },
         }
 
     created = models.DateTimeField(auto_now_add=True)
@@ -46,6 +54,9 @@ class Event(models.Model, rm.RestModel, rm.MetaDataModel):
 
     level = models.IntegerField(default=0, db_index=True)
     category = models.CharField(max_length=124, db_index=True)
+    
+    component = models.SlugField(max_length=250, null=True, blank=True, default=None)
+    component_id = models.IntegerField(null=True, blank=True, default=None)
 
     # this allows us to bundle multiple events to an incident
     incident = models.ForeignKey(
@@ -61,7 +72,7 @@ class Event(models.Model, rm.RestModel, rm.MetaDataModel):
         self.setProperty("category", value)
 
     def on_rest_saved(self, request, is_new=False):
-        rules = Rule.objects.filter(catagory=self.category).order_by("priority")
+        rules = Rule.objects.filter(category=self.category).order_by("priority")
         hit_rule = None
         priority = 10
         for rule in rules:

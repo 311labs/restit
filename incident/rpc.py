@@ -31,6 +31,9 @@ def ossec_alert_creat_from_request(request):
                     "hostname": od.hostname,
                     "description": od.title,
                     "level": level,
+                    "category": "ossec",
+                    "component": "incident.ServerOssecAlert",
+                    "component_id": od.id,
                     "metadata": od.toDict(graph="default")
                 })
         except Exception:
