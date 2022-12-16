@@ -5,6 +5,7 @@ from taskqueue.models import Task
 from .models import Bounce, Complaint, Message, Attachment, Mailbox
 from . import mailtils
 import requests
+import metrics
 from objict import objict
 
 
@@ -24,6 +25,7 @@ def on_bounce(request, msg):
         return rv.restStatus(request, True)
     for who in msg.bounce.bouncedRecipients:
         # kind, address, reason, reporter=None, code=None, source=None, source_ip=None, user=None
+        metrics.metric("emails_bounced", category="email", min_granularity="hourly")
         Bounce.log(
             kind="email",
             address=who.emailAddress,
@@ -41,6 +43,7 @@ def on_complaint(request, msg):
         return rv.restStatus(request, True)
     for who in msg.complaint.complainedRecipients:
         # kind, address, reason, reporter=None, code=None, source=None, source_ip=None, user=None
+        metrics.metric("emails_complaints", category="email", min_granularity="hourly")
         Complaint.log(
             kind="email",
             address=who.emailAddress,
@@ -70,6 +73,7 @@ def on_email(request, msg):
         from_email=msg_data.from_email,
         from_name=msg_data.from_name)
     msg.save()
+    metrics.metric("emails_received", category="email", min_granularity="hourly")
 
     for msg_atch in msg_data.attachments:
         atch = Attachment(message=msg, name=msg_atch.name)

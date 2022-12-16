@@ -23,6 +23,8 @@ import threading
 import traceback
 
 REST_METRICS = settings.get("REST_METRICS", False)
+REST_METRICS_BY_ENDPOINT = settings.get("REST_METRICS_BY_ENDPOINT", False)
+REST_METRICS_IGNORE = settings.get("REST_METRICS_IGNORE", [])
 
 
 # background task (no return)
@@ -53,8 +55,9 @@ def rest_error_catcher(func, request, *args, **kwargs):
     try:
         if REST_METRICS:
             metrics.metric("rest_calls")
-            slug_path = request.path.replace("/", "__")
-            metrics.metric(f"rest_call_{slug_path}", category="rest_calls")
+            if REST_METRICS_BY_ENDPOINT:
+                slug_path = request.path.replace("/", "__")
+                metrics.metric(f"rest_call_{slug_path}", category="rest_calls")
         return func(request, *args, **kwargs)
     except PermisionDeniedException as err:
         helpers.log_error("permission denied {} for {}:{}".format(request.user, request.method, request.path))
