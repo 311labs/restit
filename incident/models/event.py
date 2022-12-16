@@ -63,15 +63,8 @@ class Event(models.Model, rm.RestModel, rm.MetaDataModel):
         Incident, null=True, default=None, 
         related_name="events", on_delete=models.SET_NULL)
 
-    def set_level(self, value):
-        self.level = value
-        self.setProperty("level", value)
-
-    def set_category(self, value):
-        self.catagory = value
-        self.setProperty("category", value)
-
     def on_rest_saved(self, request, is_new=False):
+        self.setProperty("level", self.level)
         rules = Rule.objects.filter(category=self.category).order_by("priority")
         hit_rule = None
         priority = 10
