@@ -77,7 +77,7 @@ class RuleCheck(models.Model, rm.RestModel):
 
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
-    parent = models.ForeignKey(Rule, on_delete=models.CASCADE)
+    parent = models.ForeignKey(Rule, on_delete=models.CASCADE, related_name="checks")
     # the lower the number the sooner it runs
     name = models.CharField(max_length=200)
     # the order for which this check runs
