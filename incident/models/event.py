@@ -1,10 +1,13 @@
 from django.db import models
 
 from rest import models as rm
+from rest import log
 
 from datetime import datetime, timedelta
 from .incident import Incident
 from .rules import Rule
+
+logger = log.getLogger("incident", filename="incident.log")
 
 """
 very generic 
@@ -63,25 +66,36 @@ class Event(models.Model, rm.RestModel, rm.MetaDataModel):
         Incident, null=True, default=None, 
         related_name="events", on_delete=models.SET_NULL)
 
+    def runRules(self):
+        for rule in Rule.objects.filter(category=self.category).order_by("priority"):
+            if rule.run(self):
+                return rule
+        return None
+
     def on_rest_saved(self, request, is_new=False):
         self.setProperty("level", self.level)
-        rules = Rule.objects.filter(category=self.category).order_by("priority")
-        hit_rule = None
+        if request is not None:
+            self.reporter_ip = request.ip
+        # run through rules for the category
+        hit_rule = self.runRules()
         priority = 10
-        for rule in rules:
-            if rule.run(self):
-                hit_rule = rule
-                priority = rule.priority
-                break
-
         incident = None
         if hit_rule is not None:
-            # create incident
-            incident = None
+            priority = hit_rule.priority
             if hit_rule.bundle > 0:
                 # calculate our bundle start time
                 when = datetime.now() - timedelta(minutes=hit_rule.bundle)
                 incident = Incident.objects.filter(rule=hit_rule, created__gte=when).last()
+            elif hit_rule.action == "ignore":
+                # we do not create an incident, we just move on
+                self.save()
+                return
+        elif self.level > 3:
+            # we ignore levels 4 and higher if they did not create a rule
+            self.save()
+            logger.info(f"ignore event {self.pk} {self.description}")
+            return
+
         # always create an incident 
         is_incident_new = False
         if incident is None:
@@ -93,8 +107,6 @@ class Event(models.Model, rm.RestModel, rm.MetaDataModel):
             incident.description = self.description
             incident.save()
         self.incident = incident
-        if request is not None:
-            self.reporter_ip = request.ip
         self.save()
         # fire this off so incident notifies
         incident.on_rest_saved(request, is_new=is_incident_new)

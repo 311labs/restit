@@ -51,12 +51,15 @@ class Rule(models.Model, rm.RestModel):
     # if multiple events fire the same rule it will just bundle them together
     # this is in minutes (default=0=OFF)
     bundle = models.IntegerField(default=0) # 0=off
+    # an action to perform if this rule is hit, default is notify
+    # examples (ignore, notify, task:app_name:fname:channel)
+    action = models.CharField(max_length=200, default=None, null=True)
 
     def run(self, event):
         for check in self.checks.all():
-            if check.run(event):
-                return True
-        return False
+            if not check.run(event):
+                return False
+        return True
 
 
 class RuleCheck(models.Model, rm.RestModel):

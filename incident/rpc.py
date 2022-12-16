@@ -27,6 +27,8 @@ def ossec_alert_creat_from_request(request):
                     level = 6
                 elif od.level <= 3:
                     level = 8
+                metadata = od.toDict(graph="default")
+                metadata.country = od.geoip.country
                 am.Event.createFromDict(None, {
                     "hostname": od.hostname,
                     "description": od.title,
@@ -34,7 +36,7 @@ def ossec_alert_creat_from_request(request):
                     "category": "ossec",
                     "component": "incident.ServerOssecAlert",
                     "component_id": od.id,
-                    "metadata": od.toDict(graph="default")
+                    "metadata": metadata
                 })
         except Exception:
             rh.log_exception("during ossec alert", payload)

@@ -3,6 +3,7 @@ from django.conf import settings
 
 from rest import models as rm
 from rest import helpers as rh
+from taskqueue.models import Task
 
 
 class Incident(models.Model, rm.RestModel, rm.MetaDataModel):
@@ -38,13 +39,18 @@ class Incident(models.Model, rm.RestModel, rm.MetaDataModel):
 
     def on_rest_saved(self, request, is_new=False):
         if is_new:
-            if self.group is not None:
-                # all member of the group are notified because it is an incident group
-                self.group.notifyMembers(
-                    subject=F"New Incident - {self.description}",
-                    template="incident/email/incident_change.html",
-                    context=None,
-                    email_only=True)
+            if self.rule:
+                if self.rule.action in [None, "notify"]:
+                    if self.group is not None:
+                        # all member of the group are notified because it is an incident group
+                        self.group.notifyMembers(
+                            subject=F"New Incident - {self.description}",
+                            template="incident/email/incident_change.html",
+                            context=None,
+                            email_only=True)
+                elif self.rule.action.startswith("task:"):
+                    fields = self.task.action.split(':')
+                    Task.Publish(fields[1], fields[2], channel=fields[3])
             return
 
         self.logHistory(request=request)
