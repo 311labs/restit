@@ -74,6 +74,7 @@ class Event(models.Model, rm.RestModel, rm.MetaDataModel):
                 priority = rule.priority
                 break
 
+        incident = None
         if hit_rule is not None:
             # create incident
             incident = None

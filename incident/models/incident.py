@@ -33,18 +33,6 @@ class Incident(models.Model, rm.RestModel, rm.MetaDataModel):
 
     rule = models.ForeignKey("incident.Rule", on_delete=models.SET_NULL, null=True, default=None)
 
-    def on_rest_saved(self, request, is_new=False):
-        note = request.DATA.get("note", None)
-
-        if note:
-            kind = request.DATA.get("kind", "note")
-            self.addNote(note, request.member, kind)
-        remove_watcher_id = request.DATA.get("remove_watcher", field_type=int)
-        if remove_watcher_id:
-            self.removeWatcher(remove_watcher_id)
-
-        self.snapshot(request.member, self._changed__)
-
     def removeWatcher(self, wid):
         pass
 
@@ -54,16 +42,16 @@ class Incident(models.Model, rm.RestModel, rm.MetaDataModel):
                 # all member of the group are notified because it is an incident group
                 self.group.notifyMembers(
                     subject=F"New Incident - {self.description}",
-                    template="momo/email/incident_change.html",
+                    template="incident/email/incident_change.html",
                     context=None,
                     email_only=True)
             return
-        
+
         self.logHistory(request=request)
-        if len(request.FILES):
+        if request != None and len(request.FILES):
             for name, value in request.FILES.items():
                 self.logHistory(kind="media", media=value, request=request)
-        if "note" in request.DATA:
+        if request != None and "DATA" in request and "note" in request.DATA:
             self.logHistory(kind="note", note=request.DATA.get("note"), request=request)
 
     def logHistory(self, kind="history", note=None, media=None, request=None):
@@ -90,7 +78,7 @@ class Incident(models.Model, rm.RestModel, rm.MetaDataModel):
             # all member of the group are notified because it is an incident group
             self.group.notifyMembers(
                 subject=subject,
-                template="momo/email/incident_change.html",
+                template="incident/email/incident_change.html",
                 context=None,
                 email_only=True)
 
