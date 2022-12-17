@@ -201,8 +201,22 @@ class Task(models.Model, RestModel):
         if self.data:
             handler = self.data.get("bg_handler")
         msg = "{}:{}<br>\n{}".format(self.model, handler, self.reason)
-        sms_msg = "{}\n{}".format(subject, msg)
-        Member.notifyWithPermission("taskqueue_alerts", subject, msg, sms_msg=sms_msg)
+        # sms_msg = "{}\n{}".format(subject, msg)
+        # Member.notifyWithPermission("taskqueue_alerts", subject, msg, sms_msg=sms_msg)
+        metadata = {
+            "server": settings.get("HOSTNAME", "unknown"),
+            "task": self.pk,
+            "reason": self.reason,
+            "kind": kind,
+            "app": self.model,
+            "fname": self.fname,
+            "channel": self.channel,
+            "handler": handler
+        }
+        import incident
+        incident.event(
+            "taskqueue_errors", description=subject, details=msg, 
+            level=3, metadata=metadata)
 
     def cancel(self, reason=None):
         self.cancel_requested = True

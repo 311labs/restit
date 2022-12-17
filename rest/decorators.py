@@ -12,6 +12,7 @@ from rest.views import restStatus
 from rest.models import RestError, requestHasPerms, PermisionDeniedException
 from rest import helpers
 import metrics
+import incident
 
 from account.models import Member
 
@@ -83,29 +84,25 @@ def rest_error_catcher(func, request, *args, **kwargs):
         PersistentLog.logException(body, request=request, component="rest", action="error")
         if settings.NOTIFY_REST_ERRORS:
             subject = "REST Error: {} - {}".format(host, str(err))
-            # hide sensative data in body
-            # ebody = body
-            # if not getattr(settings, "DEBUG", False):
-            #     ebody = "-- protected: see audit log --"
-            context = {
-                "to": settings.NOTIFY_REST_ERRORS,
-                # "request": request,
-                "method": str(request.method),
-                "path": str(request.path),
-                "host": host,
+            username = "anonymous"
+            if request.member:
+                username = request.member.username
+
+            metadata = {
+                "method": request.method,
+                "path": request.path,
                 "server": server,
-                "subject": subject,
                 "error": str(err),
-                "stack": str(stack),
-                "user": str(request.user),
-                # "body": ebody,
-                # "meta": request.META,
-                "params": request.DATA.asDict()
+                "stack": stack,
+                "username": username,
+                "ip": request.ip,
             }
 
-            # try:
-            Member.notifyWithPermission(
-                "rest_errors", subject, template="email/error.html", context=context, email_only=True)
+            incident.event(
+                "rest_errors", description=subject, level=1, hostname=host,
+                details=stack, reporter_ip=request.ip,
+                metadata=metadata)
+
         return restStatus(request, False, error=str(err), stack=stack)
     return restStatus(request, False)
 
