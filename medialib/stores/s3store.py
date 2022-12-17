@@ -27,9 +27,10 @@ def getS3(as_resource=True):
     global MY_S3_CLIENT, MY_S3_RESOURCE
     if as_resource:
         if MY_S3_RESOURCE is None:
-            MY_S3_RESOURCE = _getS3(as_resource)
+            MY_S3_RESOURCE = _getS3(True)
+        return MY_S3_RESOURCE
     if MY_S3_CLIENT is None:
-        MY_S3_CLIENT = _getS3(as_resource)
+        MY_S3_CLIENT = _getS3(False)
     return MY_S3_CLIENT
 
 
