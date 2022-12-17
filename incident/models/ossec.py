@@ -40,6 +40,7 @@ class ServerOssecAlert(models.Model, rm.RestModel):
     ip          = models.CharField(max_length=32, blank=True, null=True, default=None)
     username    = models.CharField(max_length=64, blank=False, null=True, default=None)
     username2   = models.CharField(max_length=64, blank=False, null=True, default=None)
+    ssh_sig     = models.TextField(blank=False, null=True, default=None)
 
     level       = models.IntegerField(default=0)
     title       = models.CharField(max_length=200, blank=True, null=True, default=None)
