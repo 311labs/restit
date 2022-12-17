@@ -99,7 +99,7 @@ def on_raw_email(request, msg, msg_data):
     metrics.metric("emails_received", category="email", min_granularity="hourly")
 
     for msg_atch in msg_data.attachments:
-        atch = Attachment(message=msg, name=msg_atch.name)
+        atch = Attachment(message=msg, name=msg_atch.name, content_type=msg_atch.content_type)
         if msg_atch.encoding == "base64":
             atch.saveMediaFile(msg_atch.payload, "media", msg_atch.name, is_base64=True)
         elif msg_atch.encoding == "quoted-printable":
