@@ -12,6 +12,15 @@ def parseRawMessage(msgobj):
     """
     if isinstance(msgobj, str):
         msgobj = email.message_from_string(msgobj)
+
+    subject = None
+    message = None
+    body = None
+    html = None
+    attachments = []
+    body_parts = []
+    html_parts = []
+
     if msgobj['Subject'] is not None:
         decodefrag = decode_header(msgobj['Subject'])
         subj_fragments = []
@@ -20,39 +29,20 @@ def parseRawMessage(msgobj):
                 s = str(s, enc).encode('utf8', 'replace')
             subj_fragments.append(s)
         subject = ''.join(subj_fragments)
-    else:
-        subject = None
-    attachments = []
-    body = None
-    html = None
+
     for part in msgobj.walk():
         attachment = parseAttachment(part)
-        if attachment:
+        if attachment.content:
+            if attachment.content_type == "text/html":
+                html_parts.append(attachment.content)
+            elif attachment.content_type == "text/plain":
+                body_parts.append(attachment.content)
+        else:
             attachments.append(attachment)
-        elif part.get_content_type() == "text/plain":
-            if body is None:
-                body = ""
-            try:
-                body += str(
-                    part.get_payload(decode=True),
-                    part.get_content_charset(),
-                    'replace'
-                )
-            except Exception:
-                body += str(part.get_payload(decode=True))
 
-        elif part.get_content_type() == "text/html":
-            if html is None:
-                html = ""
-            html += str(
-                part.get_payload(decode=True),
-                part.get_content_charset(),
-                'replace'
-            )
-    if html:
-        html = html.strip()
-    message = []
-    if body:
+    if len(body_parts):
+        message = None
+        body = "".join(body_parts)
         body = body.strip()
         # now lets parse the first part of the message that is not "quoted"
         blocks = 0
@@ -64,7 +54,11 @@ def parseRawMessage(msgobj):
                 continue
             blocks = 0
             message.append(line.strip())
-    message = "\n".join(message).strip()
+        message = "\n".join(message).strip()
+
+    if len(html_parts):
+        html = "".join(html_parts)
+
     from_addr = parseaddr(msgobj.get('From'))
     date_time = parsedate_to_datetime(msgobj.get('Date'))
     return objict({
@@ -83,33 +77,42 @@ def parseRawMessage(msgobj):
     })
 
 
+def decodePayload(part):
+    return str(part.get_payload(decode=True), part.get_content_charset(), 'replace')
+
+
 def parseAttachment(message_part):
     content_disposition = message_part.get("Content-Disposition", None)
     if content_disposition:
         dispositions = content_disposition.strip().split(";")
-        if dispositions[0] in ["attachment", "inline"]:
-            attachment = objict()
-            attachment.payload = message_part.get_payload(decode=False)
-            attachment.content_type = message_part.get_content_type()
-            attachment.encoding = message_part.get("Content-Transfer-Encoding", "utf8")
-            attachment.name = None
-            attachment.create_date = None
-            attachment.mod_date = None
-            attachment.read_date = None
-            # print dispositions
-            for param in dispositions[1:]:
-                name,value = param.split("=")
-                name = name.strip().lower()
-                if name == "filename":
-                    attachment.name = value
-                elif name in ["create-date", "creation-date"]:
-                    attachment.create_date = value
-                elif name == "modification-date":
-                    attachment.mod_date = value
-                elif name == "read-date":
-                    attachment.read_date = value
-            return attachment
-    return None
+    else:
+        dispositions = ["inline"]
+    attachment = objict()
+    attachment.dispositions = dispositions
+    attachment.disposition = dispositions[0]
+    attachment.payload = message_part.get_payload(decode=False)
+    attachment.charset = message_part.get_content_charset()
+    attachment.content_type = message_part.get_content_type()
+    attachment.encoding = message_part.get("Content-Transfer-Encoding", "utf8")
+    if attachment.disposition == "inline" and attachment.content_type in ["text/plain", "text/html"]:
+        attachment.content = decodePayload(message_part)
+    attachment.name = None
+    attachment.create_date = None
+    attachment.mod_date = None
+    attachment.read_date = None
+    # print dispositions
+    for param in dispositions[1:]:
+        name, value = param.split("=")
+        name = name.strip().lower()
+        if name == "filename":
+            attachment.name = value
+        elif name in ["create-date", "creation-date"]:
+            attachment.create_date = value
+        elif name == "modification-date":
+            attachment.mod_date = value
+        elif name == "read-date":
+            attachment.read_date = value
+    return attachment
 
 
 def toFileObject(attachment):
