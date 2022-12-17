@@ -66,7 +66,7 @@ def on_email(request, msg):
     if msg.content is None and msg.receipt and msg.receipt.action:
         action = msg.receipt.action
         if action.type == "S3":
-            return on_s3_email(request, msg, action.bucket, action.objectKey)
+            return on_s3_email(request, msg, action.bucketName, action.objectKey)
 
     if msg.content is None:
         logger.error("message has no content", msg)
@@ -79,7 +79,7 @@ def on_email(request, msg):
 def on_s3_email(request, msg, bucket_name, object_key):
     msg_data = mailtils.parseRawMessage(s3store.getObjectContent(bucket_name, object_key))
     return on_raw_email(request, msg, msg_data)
-   
+
 
 def on_raw_email(request, msg, msg_data):
     to_email = msg.receipt.recipients[0]
