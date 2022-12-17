@@ -32,6 +32,8 @@ def parseRawMessage(msgobj):
 
     for part in msgobj.walk():
         attachment = parseAttachment(part)
+        if attachment is None:
+            continue
         if attachment.content:
             if attachment.content_type == "text/html":
                 html_parts.append(attachment.content)
@@ -83,10 +85,9 @@ def decodePayload(part):
 
 def parseAttachment(message_part):
     content_disposition = message_part.get("Content-Disposition", None)
-    if content_disposition:
-        dispositions = content_disposition.strip().split(";")
-    else:
-        dispositions = ["inline"]
+    if content_disposition is None:
+        return None
+    dispositions = content_disposition.strip().split(";")
     attachment = objict()
     attachment.dispositions = dispositions
     attachment.disposition = dispositions[0]
