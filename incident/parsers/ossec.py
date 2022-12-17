@@ -118,6 +118,8 @@ def parseAlert(request, data):
     # finally here we change the alert level
     if irule in LEVEL_REMAP_BY_RULE:
         alert.level = LEVEL_REMAP_BY_RULE[irule]
+    if len(alert.title) > 80:
+        alert.title = alert.title[:80] + "..."
     alert.save()
     return alert
 
