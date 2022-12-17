@@ -96,7 +96,7 @@ class Event(models.Model, rm.RestModel, rm.MetaDataModel):
             if hit_rule.bundle > 0:
                 # calculate our bundle start time
                 when = datetime.now() - timedelta(minutes=hit_rule.bundle)
-                incident = Incident.objects.filter(rule=hit_rule, created__gte=when).last()
+                incident = Incident.objects.filter(rule=hit_rule, created__gte=when, component=self.hostname).last()
             elif hit_rule.action == "ignore":
                 # we do not create an incident, we just move on
                 self.save()
@@ -111,7 +111,7 @@ class Event(models.Model, rm.RestModel, rm.MetaDataModel):
         is_incident_new = False
         if incident is None:
             is_incident_new = True
-            incident = Incident(rule=hit_rule, priority=priority)
+            incident = Incident(rule=hit_rule, priority=priority, component=self.hostname)
             if hit_rule is not None:
                 incident.group = hit_rule.group
             # TODO possibly make this smarter?
@@ -124,7 +124,8 @@ class Event(models.Model, rm.RestModel, rm.MetaDataModel):
                 metrics.metric(f"incidents_{self.hostname}", category="incidents", min_granularity="hourly")
             metrics.metric("incidents", category="incidents", min_granularity="hourly")
         # fire this off so incident notifies
-        incident.on_rest_saved(request, is_new=is_incident_new)
+        if is_incident_new:
+            incident.on_rest_saved(request, is_new=is_incident_new)
         
 
 class EventMetaData(rm.MetaDataBase):

@@ -84,14 +84,15 @@ def parseAlert(request, data):
             ssh_sig = m.group(2)
             if " " in ssh_sig:
                 kind, ssh_sig = ssh_sig.split(' ')
+            alert.level = 8
             alert.username = m.group(1)
             alert.ssh_sig = ssh_sig
             alert.ssh_king = kind
-            alert.title = f"SSH LOGIN:{alert.username}@{alert.hostname}"
+            alert.title = f"SSH LOGIN:{alert.username}@{alert.hostname} from {alert.src_ip}"
             # member = findUserBySshSig(ssh_sig)
             # if member:
             #     alert.title = "SSH LOGIN user: {}".format(member.username)
-    elif irule == 5501:
+    elif irule == 5501 or irule == 5502:
         # pam_unix(sshd:session): session opened for user git by (uid=0)
         m = re.search(r"session (\S+) for user (\S+)*", data.text)
         if m and m.groups():
@@ -104,10 +105,21 @@ def parseAlert(request, data):
         if m and m.groups():
             alert.username = m.group(1)
             alert.title = "sudo {}".format(m.group(2))
+        alert.level = 7
     elif irule == 5706:
         m = re.search(r"identification string from (\S+) port (\S+)", data.text)
         if m and m.groups():
             alert.src_ip = m.group(1)
+    elif irule == 5702:
+        m = re.search(r"getaddrinfo for (\S+)", data.text)
+        if m and m.groups():
+            remote_host = m.group(1)
+            alert.title = f"Reverse lookup failed for '{remote_host}'"
+    elif irule == 554:
+        m = re.search(r"New file '(\S+)' added", data.text)
+        if m and m.groups():
+            remote_file = m.group(1)
+            alert.title = f"New file detected: '{remote_file}'"    
     elif irule == 100020:
         m = re.search(r"\[(\S+)\]", data.text)
         if m and m.groups():

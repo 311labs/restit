@@ -28,7 +28,7 @@ class Incident(models.Model, rm.RestModel, rm.MetaDataModel):
         # VIEW_PERMS = ["example_permission"]
         GRAPHS = {
             "default": {
-                "extra": ["metadata"],
+                "extra": ["metadata", ("get_state_display", "state_display")],
                 "graphs": {
                     "group": "basic",
                     "assigned_to": "basic"
@@ -40,6 +40,7 @@ class Incident(models.Model, rm.RestModel, rm.MetaDataModel):
     modified = models.DateTimeField(auto_now=True)
 
     description = models.CharField(max_length=200)
+    component = models.CharField(max_length=200, null=True, default=None, db_index=True)
 
     group = models.ForeignKey("account.Group", on_delete=models.SET_NULL, null=True, default=None)
     assigned_to = models.ForeignKey("account.Member", on_delete=models.SET_NULL, null=True, default=None)
