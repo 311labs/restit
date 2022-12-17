@@ -61,6 +61,7 @@ def parseAlert(request, data):
         if m and m.groups():
             alert.username = m.group(1)
             alert.src_ip = m.group(2)
+            alert.title = f"Attempt to login with invalid user: {alert.username}"
         else:
             m = re.search(r"Invalid user  from (\S+)", data.text)
             if m and m.groups():
@@ -86,7 +87,7 @@ def parseAlert(request, data):
             alert.username = m.group(1)
             alert.ssh_sig = ssh_sig
             alert.ssh_king = kind
-            alert.title = f"SSH LOGIN:{alert.username}@{alert.hostname} - {ssh_sig}"
+            alert.title = f"SSH LOGIN:{alert.username}@{alert.hostname}"
             # member = findUserBySshSig(ssh_sig)
             # if member:
             #     alert.title = "SSH LOGIN user: {}".format(member.username)
