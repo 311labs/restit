@@ -1,11 +1,14 @@
 from rest import helpers as rh
 from rest import views as rv
 from rest.log import getLogger
+from rest import settings
 from taskqueue.models import Task
+from medialib.stores import s3store
 from .models import Bounce, Complaint, Message, Attachment, Mailbox
 from . import mailtils
-import requests
 import metrics
+
+import requests
 from objict import objict
 
 
@@ -55,11 +58,31 @@ def on_complaint(request, msg):
 
 
 def on_email(request, msg):
+    """
+    Email receiving can be configured in 2 ways.
+     1. raw email via SNS which would have content field
+     2. s3 bucket stored email which will have a receipt.action.bucketName
+    """
+    if msg.content is None and msg.receipt and msg.receipt.action:
+        action = msg.receipt.action
+        if action.type == "S3":
+            return on_s3_email(request, msg, action.bucket, action.objectKey)
+
     if msg.content is None:
         logger.error("message has no content", msg)
         return rv.restStatus(request, False)
-    to_email = msg.receipt.recipients[0]
+
     msg_data = mailtils.parseRawMessage(msg.content)
+    return on_raw_email(request, msg, msg_data)
+
+
+def on_s3_email(request, msg, bucket_name, object_key):
+    msg_data = mailtils.parseRawMessage(s3store.getObjectContent(bucket_name, object_key))
+    return on_raw_email(request, msg, msg_data)
+   
+
+def on_raw_email(request, msg, msg_data):
+    to_email = msg.receipt.recipients[0]
     logger.info("parsed", msg_data)
     msg = Message(
         to_email=to_email,

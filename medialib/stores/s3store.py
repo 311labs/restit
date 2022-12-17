@@ -7,6 +7,7 @@ import botocore
 from urllib.parse import urlparse
 from datetime import datetime
 import io
+import sys
 from medialib import utils
 import threading
 
@@ -36,9 +37,17 @@ def getBucket(name):
     s3r = getS3()
     return s3r.Bucket(name)
 
+
 def getObject(bucket_name, key):
     s3r = getS3()
     return s3r.Object(bucket_name, key)
+
+
+def getObjectContent(bucket_name, key):
+    s3r = getS3(False)
+    obj = s3r.get_object(Bucket=bucket_name, Key=key)
+    return obj['Body'].read().decode('utf-8')
+
 
 class ProgressPercentage(object):
     def __init__(self, size):
@@ -57,6 +66,7 @@ class ProgressPercentage(object):
                     self._filename, self._seen_so_far, self._size,
                     percentage))
             sys.stdout.flush()
+
 
 class S3Item(object):
     def __init__(self, url):
@@ -100,13 +110,16 @@ class S3Item(object):
     def delete(self):
         self.object.delete()
 
+
 def upload(url, fp, background=False):
     obj = S3Item(url)
     obj.upload(fp)
 
+
 def view_url_noexpire(url, is_secure=False):
     obj = S3Item(url)
     return obj.public_url
+
 
 def view_url(url, expires=600, is_secure=False):
     if expires is None:
@@ -114,18 +127,21 @@ def view_url(url, expires=600, is_secure=False):
     obj = S3Item(url)
     return obj.generateURL(expires)
 
+
 def exists(url):
     obj = S3Item(url)
     return obj.exists
+
 
 def get_file(url, fp):
     obj = S3Item(url)
     return obj.download(fp)
 
+
 def delete(url):
     if url[-1] == "/":
-        prefix = u.path.lstrip("/")
-        bucket_name = u.netloc
+        prefix = url.path.lstrip("/")
+        bucket_name = url.netloc
         s3 = getS3()
         response = s3.list_objects_v2(
             Bucket=bucket_name,
@@ -137,6 +153,7 @@ def delete(url):
         obj = S3Item(url)
         obj.delete()
         # _getkey(url, key=settings.AWS_ADMIN_KEY, secret=settings.AWS_ADMIN_SECRET).delete()
+
 
 def openFile(fp):
     # this should fail if already opened.. if not iwll open
@@ -150,6 +167,7 @@ def openFile(fp):
     except IOError:
         background = False
     return fp
+
 
 def path(url):
     u = urlparse(url)

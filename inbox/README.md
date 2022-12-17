@@ -24,6 +24,7 @@ SES_ACCESS_KEY = "***"
 SES_SECRET_KEY = "***"
 SES_REGION = "us-east-1"
 
+EMAIL_S3_BUCKET = "YOUR_EMAIL_BUCKET"
 EMAIL_USE_TLS = True
 EMAIL_HOST = 'email-smtp.us-east-1.amazonaws.com'
 EMAIL_HOST_USER = '***'
@@ -47,4 +48,11 @@ DNS Records needs to include
 
 
 
-### Goto AWS SNS Admin
+## Setup Email Receiving
+
+https://aws.amazon.com/premiumsupport/knowledge-center/ses-receive-inbound-emails/
+
+
+
+
+
