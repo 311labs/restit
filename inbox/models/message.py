@@ -59,6 +59,7 @@ class Attachment(models.Model, rm.RestModel):
 
     created = models.DateTimeField(auto_now_add=True, editable=False, db_index=True)
     name = models.CharField(max_length=255, null=True, default=None)
+    content_type = models.CharField(max_length=128, null=True, default=None)
     message = models.ForeignKey(Message, related_name="attachments", on_delete=models.CASCADE)
     media = models.ForeignKey("medialib.MediaItem", related_name="attachments", on_delete=models.CASCADE)
 
