@@ -6,6 +6,21 @@ from rest import helpers as rh
 from taskqueue.models import Task
 
 
+INCIDENT_STATE_NEW = 0
+INCIDENT_STATE_OPENED = 1
+INCIDENT_STATE_PAUSED = 2
+INCIDENT_STATE_IGNORE = 3
+INCIDENT_STATE_RESOLVED = 4
+
+INCIDENT_STATES = [
+    (INCIDENT_STATE_NEW, "new"),
+    (INCIDENT_STATE_OPENED, "opened"),
+    (INCIDENT_STATE_PAUSED, "paused"),
+    (INCIDENT_STATE_IGNORE, "ignored"),
+    (INCIDENT_STATE_RESOLVED, "resolved"),
+]
+
+
 class Incident(models.Model, rm.RestModel, rm.MetaDataModel):
     class RestMeta:
         POST_SAVE_FIELDS = ["level", "catagory"]
@@ -29,8 +44,8 @@ class Incident(models.Model, rm.RestModel, rm.MetaDataModel):
     group = models.ForeignKey("account.Group", on_delete=models.SET_NULL, null=True, default=None)
     assigned_to = models.ForeignKey("account.Member", on_delete=models.SET_NULL, null=True, default=None)
     
-    priority = models.IntegerField(default=0) # 1-10, 1 being the highest
-    state = models.IntegerField(default=0) # 0=new, 1=opened, 2=paused, 3=ignore, 4=resolved
+    priority = models.IntegerField(default=0)  # 1-10, 1 being the highest
+    state = models.IntegerField(default=0, choices=INCIDENT_STATES)  # 0=new, 1=opened, 2=paused, 3=ignore, 4=resolved
 
     rule = models.ForeignKey("incident.Rule", on_delete=models.SET_NULL, null=True, default=None)
 
