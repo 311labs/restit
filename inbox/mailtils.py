@@ -41,7 +41,7 @@ def parseRawMessage(msgobj):
             attachments.append(attachment)
 
     if len(body_parts):
-        message = None
+        message = []
         body = "".join(body_parts)
         body = body.strip()
         # now lets parse the first part of the message that is not "quoted"
