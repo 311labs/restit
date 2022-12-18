@@ -106,6 +106,8 @@ def parseAttachment(message_part):
         name, value = param.split("=")
         name = name.strip().lower()
         if name == "filename":
+            if value.startswith('"') or value.startswith("'"):
+                value = value.strip()[1:-1]
             attachment.name = value
         elif name in ["create-date", "creation-date"]:
             attachment.create_date = value
