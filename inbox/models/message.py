@@ -56,7 +56,13 @@ class Attachment(models.Model, rm.RestModel):
     class RestMeta:
         CAN_SAVE = CAN_CREATE = False
         DEFAULT_SORT = "-id"
-
+        GRAPHS = {
+            "default": {
+                "graphs": {
+                    "media": "basic"
+                },
+            }
+        }
     created = models.DateTimeField(auto_now_add=True, editable=False, db_index=True)
     name = models.CharField(max_length=255, null=True, default=None)
     content_type = models.CharField(max_length=128, null=True, default=None)
