@@ -363,7 +363,11 @@ def restReturn(request, data, accept_list=None):
 def __call_func(func, *args, **kwargs):
     if not kwargs:
         return func(*args)
-    take = inspect.getargspec(func)[0]
+    if hasattr(inspect, "getargspec"):
+        # removed in python3.11 (but much faster)
+        take = inspect.getargspec(func)[0]
+    else:
+        take = list(inspect.signature(func).parameters.keys())
     give = {}
     for arg in kwargs:
         if arg in take:
@@ -594,8 +598,8 @@ def restGet(request, qset, model=None, fields=None, extra=[], exclude=[], fkey_d
         if isinstance(data, dict) and hasattr(data, "asDict"):
             data = data.asDict()
         elif hasattr(data, '__func__'):
-            # helpers.log_print("__func__  {} ({}) {}".format(f, type(data), data))
-            data = __call_func(data, *fargs, request = orig_request, obj__self=qset, **orig_objs)
+            helpers.log_error("__func__", repr(f), repr(type(data)), repr(data))
+            data = __call_func(data, *fargs, request=orig_request, obj__self=qset, **orig_objs)
         elif f.startswith("get_") and f.endswith("_display") and callable(data):
             data = data()
 

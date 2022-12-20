@@ -1,13 +1,9 @@
 import random
-from collections import OrderedDict
 from datetime import datetime, timedelta
-from django.template.defaultfilters import slugify
 from rest import settings, UberDict
 from ws4redis.redis import getRedisClient
 from . import utils
 
-app_settings = settings.getAppSettings("metrics")
-GRANULARITIES = ['seconds', 'minutes', 'hourly', 'daily', 'weekly', 'monthly', 'yearly']
 _redis_model = None
 
 
@@ -114,7 +110,6 @@ def delete_test_metrics(slug='test-metric', num=100):
         r.r.delete(*keys)  # delete the metrics
 
 
-
 def dedupe(items):
     """Remove duplicates from a sequence (of hashable items) while maintaining
     order. NOTE: This only works if items in the list are hashable types.
@@ -160,61 +155,6 @@ class R(object):
 
         self.r = getRedisClient()
 
-    def _date_range(self, granularity, since, to=None):
-        """Returns a generator that yields ``datetime.datetime`` objects from
-        the ``since`` date until ``to`` (default: *now*).
-
-        * ``granularity`` -- The granularity at which the generated datetime
-          objects should be created: seconds, minutes, hourly, daily, weekly,
-          monthly, or yearly
-        * ``since`` -- a ``datetime.datetime`` object, from which we start
-          generating periods of time. This can also be ``None``, and will
-          default to the past 7 days if that's the case.
-        * ``to`` -- a ``datetime.datetime`` object, from which we start
-          generating periods of time. This can also be ``None``, and will
-          default to now if that's the case.
-
-        If ``granularity`` is one of daily, weekly, monthly, or yearly, this
-        function gives objects at the daily level.
-
-        If ``granularity`` is one of the following, the number of datetime
-        objects returned is capped, otherwise this code is really slow and
-        probably generates more data than we want:
-
-            * hourly: returns at most 720 values (~30 days)
-            * minutes: returns at most 480 values (8 hours)
-            * second: returns at most 300 values (5 minutes)
-
-        For example, if granularity is "seconds", we'll receive datetime
-        objects that differ by 1 second each.
-
-        """
-        if since is None:
-            since = datetime.utcnow() - timedelta(days=7)  # Default to 7 days
-
-        if to is None:
-            to = datetime.utcnow()
-        elapsed = (to - since)
-
-        # Figure out how many units to generate for the elapsed time.
-        # I'm going to use `granularity` as a keyword parameter to timedelta,
-        # so I need to change the wording for hours and anything > days.
-        if granularity == "seconds":
-            units = elapsed.total_seconds()
-            units = 300 if units > 300 else units
-        elif granularity == "minutes":
-            units = elapsed.total_seconds() / 60
-            units = 480 if units > 480 else units
-        elif granularity == "hourly":
-            granularity = "hours"
-            units = elapsed.total_seconds() / 3600
-            units = 720 if units > 720 else units
-        else:
-            granularity = "days"
-            units = elapsed.days + 1
-
-        return (to - timedelta(**{granularity: u}) for u in range(int(units)))
-
     def categories(self):
         """Returns a set of Categories under which metrics may have been
         organized."""
@@ -246,77 +186,6 @@ class R(object):
         # Store all category names in a Redis set, for easy retrieval
         self.r.sadd(self._categories_key, category)
 
-    def _granularities(self, min_granularity=None):
-        """Returns a generator of all possible granularities based on the
-        MIN_GRANULARITY and MAX_GRANULARITY settings.
-        """
-        if min_granularity is None:
-            min_granularity = app_settings.MIN_GRANULARITY
-        keep = False
-        for g in GRANULARITIES:
-            if g == min_granularity and not keep:
-                keep = True
-            elif g == app_settings.MAX_GRANULARITY and keep:
-                keep = False
-                yield g
-            if keep:
-                yield g
-
-    def _get_metric_key_pattern(self, granularity, slug, date):
-        """ The Redis metric key and date formatting patterns for each key, by granularity"""
-        patterns_by_granularity = {
-            "seconds": {"key": "m:{0}:s:{1}", "date_format": "%Y-%m-%d-%H-%M-%S"},
-            "minutes": {"key": "m:{0}:i:{1}", "date_format": "%Y-%m-%d-%H-%M"},
-            "hourly": {"key": "m:{0}:h:{1}", "date_format": "%Y-%m-%d-%H"},
-            "daily": {"key": "m:{0}:{1}", "date_format": "%Y-%m-%d"},
-            "weekly": {
-                "key": "m:{0}:w:{1}",
-                "date_format": self._get_weekly_date_format(date),
-            },
-            "monthly": {"key": "m:{0}:m:{1}", "date_format": "%Y-%m"},
-            "yearly": {"key": "m:{0}:y:{1}", "date_format": "%Y"},
-        }
-        pattern_for_granularity = patterns_by_granularity[granularity]
-        fmt = pattern_for_granularity["date_format"]
-        date_string = date.strftime(fmt)
-        return pattern_for_granularity["key"].format(slug, date_string)
-
-    def _get_weekly_date_format(self, date):
-        if app_settings.USE_ISO_WEEK_NUMBER:
-            # We can return instantly because ISO week start on monday
-            return "{year}-{week_no}".format(year=date.isocalendar()[0], week_no=date.isocalendar()[1])
-        return "%Y-%{0}".format('W' if app_settings.MONDAY_FIRST_DAY_OF_WEEK else 'U')
-
-    def _build_key_patterns(self, slug, date, min_granularity=None):
-        """Builds an OrderedDict of metric keys and patterns for the given slug
-        and date."""
-        # we want to keep the order, from smallest to largest granularity
-        patts = OrderedDict()
-        for g in self._granularities(min_granularity=min_granularity):
-            patts[g] = self._get_metric_key_pattern(g, slug, date)
-        return patts
-
-    def _build_keys(self, slug, date=None, granularity='all', min_granularity=None):
-        """Builds redis keys used to store metrics.
-
-        * ``slug`` -- a slug used for a metric, e.g. "user-signups"
-        * ``date`` -- (optional) A ``datetime.datetime`` object used to
-          generate the time period for the metric. If omitted, the current date
-          and time (in UTC) will be used.
-        * ``granularity`` -- Must be one of: "all" (default), "yearly",
-        "monthly", "weekly", "daily", "hourly", "minutes", or "seconds".
-
-        Returns a list of strings.
-
-        """
-        slug = slugify(slug)  # Ensure slugs have a consistent format
-        if date is None:
-            date = datetime.utcnow()
-        patts = self._build_key_patterns(slug, date, min_granularity=min_granularity)
-        if granularity == "all":
-            return list(patts.values())
-        return [patts[granularity]]
-
     def metric_slugs(self):
         """Return a set of metric slugs (i.e. those used to create Redis keys)
         for this app."""
@@ -328,7 +197,7 @@ class R(object):
             {<category_name>: set(<slug1>, <slug2>, ...)}
 
         """
-        result = OrderedDict()
+        result = utils.OrderedDict()
         categories = sorted(self.r.smembers(self._categories_key))
         for category in categories:
             result[category] = self.category_slugs(category)
@@ -386,7 +255,7 @@ class R(object):
             m:<slug>:y:<yyyy>                # Year
 
         """
-        keys = self._build_keys(slug, date=date)
+        keys = utils.build_keys(slug, date=date)
 
         # Add the slug to the set of metric slugs
         self.r.sadd(self._metric_slugs_key, slug)
@@ -445,7 +314,7 @@ class R(object):
 
         # Increment keys. NOTE: current redis-py (2.7.2) doesn't include an
         # incrby method; .incr accepts a second ``amount`` parameter.
-        keys = self._build_keys(slug, date=date, min_granularity=min_granularity)
+        keys = utils.build_keys(slug, date=date, min_granularity=min_granularity)
 
         # Use a pipeline to speed up incrementing multiple keys
         pipe = self.r.pipeline()
@@ -463,8 +332,8 @@ class R(object):
 
         """
         results = UberDict()
-        granularities = self._granularities()
-        keys = self._build_keys(slug)
+        granularities = utils.granularities()
+        keys = utils.build_keys(slug)
         for granularity, key in zip(granularities, keys):
             try:
                 results[granularity] = int(self.r.get(key))
@@ -490,12 +359,12 @@ class R(object):
         # value names instead of granularity names, but respect the min/max
         # granularity settings.
         keys = ['seconds', 'minutes', 'hours', 'day', 'week', 'month', 'year']
-        key_mapping = {gran: key for gran, key in zip(GRANULARITIES, keys)}
-        keys = [key_mapping[gran] for gran in self._granularities()]
+        key_mapping = {gran: key for gran, key in zip(utils.GRANULARITIES, keys)}
+        keys = [key_mapping[gran] for gran in utils.granularities()]
 
         results = []
         for slug in slug_list:
-            metrics = self.r.mget(*self._build_keys(slug))
+            metrics = self.r.mget(*utils.build_keys(slug))
             if any(metrics):  # Only if we have data.
                 results.append((slug, dict(zip(keys, metrics))))
         return results
@@ -566,8 +435,8 @@ class R(object):
         # Build the set of Redis keys that we need to get.
         keys = []
         for slug in slugs:
-            for date in self._date_range(granularity, since, to):
-                keys += self._build_keys(slug, date, granularity)
+            for date in utils.daterange(granularity, since, to):
+                keys += utils.build_keys(slug, date, granularity)
         keys = list(dedupe(keys))
 
         # Fetch our data, replacing any None-values with zeros
@@ -659,7 +528,7 @@ class R(object):
         # by periods. Since the history is sorted by key (which includes both
         # the slug and the date, the values should be ordered correctly.
         periods = []
-        data = OrderedDict()
+        data = utils.OrderedDict()
         for k, v in history:
             period = utils.strip_metric_prefix(k)
             if period not in periods:
@@ -689,7 +558,7 @@ class R(object):
 
     def _gauge_key(self, slug):
         """Make sure our slugs have a consistent format."""
-        return "g:{0}".format(slugify(slug))
+        return "g:{0}".format(utils.slugify(slug))
 
     def gauge(self, slug, current_value):
         """Set the value for a Gauge.

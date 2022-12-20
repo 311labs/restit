@@ -2,7 +2,7 @@ import sys
 
 from functools import wraps
 from django.urls import URLResolver
-from django.urls import re_path
+from django.urls import re_path, path
 from django.shortcuts import Http404
 from django.http import HttpResponseRedirect
 from django.utils.cache import patch_cache_control, add_never_cache_headers, patch_vary_headers
@@ -13,8 +13,6 @@ from rest.models import RestError, requestHasPerms, PermisionDeniedException
 from rest import helpers
 import metrics
 import incident
-
-from account.models import Member
 
 from datetime import datetime
 from auditlog.models import PersistentLog
@@ -175,9 +173,12 @@ def _url_method(pattern, method=None, *args, **kwargs):
                     kwargs['kwargs']['__PATTERN'] = pattern
                 else:
                     func = f
-                if type(pattern) not in [str, str]:
+                if not isinstance(pattern, str):
                     helpers.log_print("NOT A STRING", pattern)
-                rpc_root_module.urlpatterns += [re_path(pattern, func, *args, **kwargs)]
+                if pattern.startswith("^") or pattern.endswith("$"):
+                    rpc_root_module.urlpatterns += [re_path(pattern, func, *args, **kwargs)]
+                else:
+                    rpc_root_module.urlpatterns += [path(pattern, func, *args, **kwargs)]
             f.__url__ = (lmethod, pattern)
             f.csrf_exempt = True
         return f

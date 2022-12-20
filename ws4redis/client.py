@@ -138,6 +138,10 @@ def sendToGroups(groups, name, message=None, priority=0, model=None, model_pk=No
     return sendMessageToModels("group", groups, buildEventMessage(name, message, priority, model, model_pk, custom))
 
 
+def sendToModels(channel, models, name, message=None, priority=0, model=None, model_pk=None, custom=None):
+    return sendMessageToModels(channel, models, buildEventMessage(name, message, priority, model, model_pk, custom))
+
+
 def sendMessageToModels(channel, models, msg):
     return RedisStore().publish(RedisMessage(msg), channel=channel, pk=[g.pk for g in models])
 
@@ -183,3 +187,7 @@ def waitForMessage(pubsub, msg_filter):
         time.sleep(1.0)
     pubsub.unsubscribe()
     return None
+
+
+def isOnline(name, pk):
+    return sismember(f"{name}:online", pk)

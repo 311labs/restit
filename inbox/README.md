@@ -50,6 +50,29 @@ DNS Records needs to include
 
 ## Setup Email Receiving
 
+```
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowSESPuts",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ses.amazonaws.com"
+      },
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::AWSDOC-EXAMPLE-BUCKET/*",
+      "Condition": {
+        "StringEquals": {
+          "aws:Referer": "111122223333"
+        }
+      }
+    }
+  ]
+}
+```
+
+
 https://aws.amazon.com/premiumsupport/knowledge-center/ses-receive-inbound-emails/
 
 
