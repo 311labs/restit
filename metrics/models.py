@@ -7,12 +7,12 @@ from objict import objict
 from . import utils
 
 
-def metric(slug, keys, data, min_granularity="hourly", group=None, **kwargs):
+def metric(slug, keys, data, min_granularity="hourly", group=None, date=None):
     # keys is a ordered list of keys to map to k1,k2,etc
     # data is a dict of key/values
     uuid_key = generate_uuid(slug, group)
     granularities = utils.granularities(min_granularity)
-    date = kwargs.get("date", None)
+    date = date
     if date is None:
         date = utils.datetime.utcnow()
     uuids = utils.build_keys(uuid_key, date, min_granularity=min_granularity)
@@ -66,11 +66,8 @@ def get_metrics(slug, keys, granularity, start, end=None, group=None):
         slug=slug, granularity=granularity,
         group=group, start__gte=start, start__lte=end)
     raw_metrics = dict()
-    print(qset.count())
     for obj in qset:
-        print(obj.uuid)
         raw_metrics[utils.strip_metric_prefix(obj.uuid)] = obj.getMetrics()
-    print(raw_metrics)
     periods = []
     data = dict()
     for k in keys:
