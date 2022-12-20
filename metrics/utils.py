@@ -147,6 +147,8 @@ def build_keys(slug, date=None, granularity='all', min_granularity=None):
     slug = slugify(slug)  # Ensure slugs have a consistent format
     if date is None:
         date = datetime.utcnow()
+    if min_granularity is None and granularity != "all":
+        min_granularity = granularity
     patts = build_key_patterns(slug, date, min_granularity=min_granularity)
     if granularity == "all":
         return list(patts.values())
@@ -155,16 +157,16 @@ def build_keys(slug, date=None, granularity='all', min_granularity=None):
 
 def date_for_granulatiry(date, granularity):
     if granularity == "minutes":
-        return date.replace(second=0)
+        return date.replace(second=0, microsecond=0)
     elif granularity == "hourly":
-        return date.replace(minute=0, second=0)
+        return date.replace(minute=0, second=0, microsecond=0)
     elif granularity == "daily":
-        return date.replace(hour=0, minute=0, second=0)
+        return date.replace(hour=0, minute=0, second=0, microsecond=0)
     elif granularity == "weekly":
         return get_weekly_date(date)
     elif granularity == "monthly":
-        return date.replace(day=1, hour=0, minute=0, second=0)
-    return date.replace(month=1, day=1, hour=0, minute=0, second=0)
+        return date.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    return date.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
 
 
 def date_range(granularity, since, to=None):

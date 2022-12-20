@@ -25,7 +25,7 @@ def metric(slug, keys, data, min_granularity="hourly", group=None, **kwargs):
         m.updateMetrics(keys, data, created)
 
 
-def get_metric(slug, keys, granularity, start, end=None, group=None):
+def get_totals(slug, keys, granularity, start, end=None, group=None):
     start = utils.date_for_granulatiry(start, granularity)
     if end is None:
         end = utils.datetime.utcnow()
@@ -40,7 +40,54 @@ def get_metric(slug, keys, granularity, start, end=None, group=None):
     for k in keys:
         out[k] = sums[f"v{i}"]
         i += 1
-    return objict(slug=slug, granularity=granularity, start=start,end=end, values=out)
+    return objict(slug=slug, granularity=granularity, start=start, end=end, values=out)
+
+
+def get_metrics(slug, keys, granularity, start, end=None, group=None):
+    """
+    returns data ready for Chart.js
+    'periods': ['y:2012', 'y:2013', 'y:2014']
+    'data': [
+      {
+        'slug': 'bar',
+        'values': [1, 2, 3]
+      },
+      {
+        'slug': 'foo',
+        'values': [4, 5, 6]
+      },
+    ]
+    """
+    start = utils.date_for_granulatiry(start, granularity)
+    if end is None:
+        end = utils.datetime.utcnow()
+    end = utils.date_for_granulatiry(end, granularity)
+    qset = Metrics.objects.filter(
+        slug=slug, granularity=granularity,
+        group=group, start__gte=start, start__lte=end)
+    raw_metrics = dict()
+    print(qset.count())
+    for obj in qset:
+        print(obj.uuid)
+        raw_metrics[utils.strip_metric_prefix(obj.uuid)] = obj.getMetrics()
+    print(raw_metrics)
+    periods = []
+    data = dict()
+    for k in keys:
+        data[k] = []
+    for date in utils.date_range(granularity, start, end):
+        period = utils.strip_metric_prefix(utils.build_keys(slug, date, granularity)[0])
+        periods.append(period)
+    periods.reverse()
+    for period in periods:
+        if period not in raw_metrics:
+            for k in keys:
+                data[k].append(0)
+        else:
+            values = raw_metrics[period]
+            for k in keys:
+                data[k].append(values.get(k, 0))
+    return objict(periods=periods, data=data)
 
 
 def generate_uuid(slug, group):
@@ -110,6 +157,15 @@ class Metrics(models.Model, rm.RestModel):
 
     k14 = models.SlugField(max_length=64, null=True, default=None)
     v14 = models.IntegerField(default=0)
+
+    def getMetrics(self):
+        metrics = objict()
+        for i in range(1, 15):
+            key = getattr(self, f"k{i}", None)
+            if key is None:
+                return metrics
+            metrics[key] = getattr(self, f"v{i}", 0)
+        return metrics
 
     def updateMetrics(self, keys, data, update_keys=False):
         params = {}
