@@ -74,7 +74,6 @@ def cbc_decrypt(key, encrypted):
         key_iv = deterministric_key_iv(salt_prefix, key, salt, 32 + 16)
         key = key_iv[:32]
         iv = key_iv[32:]
-    print(repr(key_iv))
     aes = AES.new(key, AES.MODE_CBC, iv)
     decrypted = aes.decrypt(encrypted[16:])
     return util.unpad(decrypted)

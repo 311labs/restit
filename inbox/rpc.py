@@ -42,7 +42,7 @@ def rest_complaint(request, pk=None):
 
 @rd.urlPOST(r'^ses/incoming$')
 def rest_ses_incoming(request):
-    msg_type = request.DATA.get("Type")
+    msg_type = request.DATA.get(["Type", "notificationType"])
     handler = SES_HANDLERS.get(msg_type, None)
     if not handler:
         rh.log_error("rest_on_ses_incoming", request.DATA.toDict())

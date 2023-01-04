@@ -31,15 +31,15 @@ class JWTokenMiddleware(object):
         request.token_bearer = None
         request.device_id = None
         request.auth_model = None
-        # request.ip = helpers.getRemoteIP(request)
-        # request.location = None
+        request.member = None
+        if not hasattr(request, "ip"):
+            request.ip = helpers.getRemoteIP(request)
         token = request.META.get('HTTP_AUTHORIZATION', "").strip()
         if token.count(" ") != 1:
             self.process_cookie(request)
             return
         # helpers.log_error("token auth in progress", token)
         request.token_bearer, request.token = token.split(' ')
-        request.member = None
         if request.token_bearer.lower() == "bearer":
             self.process_jwt(request)
         elif request.token_bearer.lower() == "authtoken":

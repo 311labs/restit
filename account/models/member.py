@@ -298,10 +298,10 @@ class Member(User, RestModel, MetaDataModel):
             self.save()
 
     def addPermission(self, perm):
-        self.setProperty(perm, 1, "permissions")
+        return self.setProperty(perm, 1, "permissions")
 
     def removePermission(self, perm):
-        self.setProperty(perm, None, "permissions")
+        return self.setProperty(perm, None, "permissions")
 
     def hasPermission(self, perm):
         return self.hasPerm(perm)

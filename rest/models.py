@@ -1444,14 +1444,18 @@ class RestModel(object):
         perms = getattr(cls.RestMeta, "CREATE_PERMS", None)
         if not perms:
             perms = getattr(cls.RestMeta, "SAVE_PERMS", None)
-        if perms and (not request.member or not request.member.hasPerm(perms)):
-            uname = "AnonymousUser"
-            if request.member:
-                uname = request.member.username
-            err = F"{uname} permission denied to create {cls.__name__}"
-            if request.member:
-                request.member.auditLog(err, action="error", level=8)
-            raise PermisionDeniedException(err, 435)
+        if perms:
+            status, error, code = requestHasPerms(request, perms)
+            if not status:
+                uname = "AnonymousUser"
+                if request.member:
+                    uname = request.member.username
+                    request.member.auditLog(error, action="error", level=8)
+                elif request.auth_model:
+                    uname = str(request.auth_model)
+                    request.auth_model.auditLog(error, action="error", level=8)
+                error = F"{uname} permission denied to create {cls.__name__}"
+                raise PermisionDeniedException(error, code)
         can_create = getattr(cls.RestMeta, "CAN_CREATE", True)
         if not can_create:
             return GRAPH_HELPERS.restStatus(request, False, error="creation not allowed via rest for this model.")
@@ -1815,6 +1819,14 @@ class RestModel(object):
             if is_id and fn == field.name:
                 return True
         return False
+
+    @classmethod
+    def get_model_fields(cls):
+        return cls._meta.fields
+
+    @classmethod
+    def get_model_field_names(cls):
+        return [f.name for f in cls._meta.fields]
 
     @classmethod
     def get_field_type(cls, fieldname):

@@ -8,7 +8,7 @@ from django.http import HttpResponseRedirect
 from django.utils.cache import patch_cache_control, add_never_cache_headers, patch_vary_headers
 
 from rest import settings
-from rest.views import restStatus
+from rest.views import restStatus, restPermissionDenied
 from rest.models import RestError, requestHasPerms, PermisionDeniedException
 from rest import helpers
 import metrics
@@ -179,6 +179,8 @@ def _url_method(pattern, method=None, *args, **kwargs):
                     rpc_root_module.urlpatterns += [re_path(pattern, func, *args, **kwargs)]
                 else:
                     rpc_root_module.urlpatterns += [path(pattern, func, *args, **kwargs)]
+                    if not pattern.endswith("/") and not pattern.endswith(">"):
+                        rpc_root_module.urlpatterns += [path(pattern + "/", func, *args, **kwargs)]
             f.__url__ = (lmethod, pattern)
             f.csrf_exempt = True
         return f
@@ -327,6 +329,18 @@ def staff_required(func):
             return restStatus(request, False, error="staff request denied", error_code=402)
         return rest_error_catcher(func, request, *args, **kwargs)
     return inner_func
+
+
+class requires_params(object):
+    def __init__(self, params):
+        self.params = params
+
+    def __call__(self, func):
+        def inner_func(request=None, *args, **kwargs):
+            if not request.DATA.hasRequired(self.params):
+                return restPermissionDenied(request, error="missing required fields")
+            return rest_error_catcher(func, request, *args, **kwargs)
+        return inner_func
 
 
 class perm_required(object):

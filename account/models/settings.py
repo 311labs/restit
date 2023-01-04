@@ -1,6 +1,6 @@
 from django.db import models
 from rest import models as rm
-from rest.encryption import DECRYPTER
+from rest.encryption import DECRYPTER, ENCRYPTER
 from rest import UberDict
 
 SETTINGS_CACHE = UberDict()
@@ -35,7 +35,18 @@ class SettingsMetaData(rm.MetaDataBase):
     parent = models.ForeignKey(Settings, related_name="properties", on_delete=models.CASCADE)
 
 
-def getSetting(name, key, decrypt=False):
+def setSetting(name, key, value, encrypt=False):
+    obj = Settings.objects.filter(name=name).last()
+    if obj is None:
+        obj = Settings(name=name)
+        obj.save()
+    if encrypt:
+        value = ENCRYPTER.encrypt(value)
+    obj.setProperty(key, value)
+    SETTINGS_CACHE[name] = UberDict.fromdict(obj.metadata())
+
+
+def getSetting(name, key, decrypt=False, cache=True):
     settings = getSettingsDict(name)
     if settings is None:
         return None
@@ -47,7 +58,8 @@ def getSetting(name, key, decrypt=False):
         return value
 
     value = DECRYPTER.decrypt(value)
-    settings.set(f"decrypted.{key}", value)
+    if cache:
+        settings.set(f"decrypted.{key}", value)
     return value
 
 
@@ -59,5 +71,5 @@ def getSettingsDict(name, refresh=False):
     if refresh or name not in SETTINGS_CACHE:
         obj = Settings.objects.filter(name=name).last()
         if obj:
-            SETTINGS_CACHE[name] = UberDict.fromdict(obj.metadata)
+            SETTINGS_CACHE[name] = UberDict.fromdict(obj.metadata())
     return SETTINGS_CACHE.get(name, None)

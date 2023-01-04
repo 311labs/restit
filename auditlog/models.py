@@ -54,7 +54,7 @@ class PersistentLog(models.Model, RestModel):
     class RestMeta:
         DEFAULT_SORT = "-when"
         CAN_SAVE = False
-        QUERY_FIELDS = ["level", "component", "pkey", "action", "request_method", "request_path", "tid", "group"]
+        QUERY_FIELDS = ["level", "component", "pkey", "action", "request_method", "request_path", "tid", "group", "user"]
         SEARCH_FIELDS = ["user__username", "user__last_name", "message", "session__ip", "request_path"]
         SEARCH_TERMS = [
             "message", "action", "component", "tid",

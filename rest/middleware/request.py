@@ -85,8 +85,8 @@ class GlobalRequestMiddleware(object):
 
     def process_request(self, request):
         _requests[currentThread().ident] = request
-        request.ip = helpers.getRemoteIP(request)
-        # print "IP: " + request.ip
+        if not hasattr(request, "ip"):
+            request.ip = helpers.getRemoteIP(request)
         request.setLogModel = types.MethodType(helpers.setLogModel, request)
         request._log_component = None
         request._log_pk = None

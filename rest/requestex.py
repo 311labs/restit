@@ -361,6 +361,9 @@ class RequestData(object):
     def asUberDict(self):
         return UberDict.fromdict(self.__data)
 
+    def asObjict(self):
+        return objict.fromdict(self.__data)
+
     def toObject(self):
         return objict.fromdict(self.__data)
 

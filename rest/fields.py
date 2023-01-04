@@ -3,7 +3,7 @@ from django.db import models
 from django.forms.widgets import ClearableFileInput
 from django.core.files.uploadedfile import UploadedFile
 from django.core import validators
-from .uberdict import UberDict
+from objict import objict
 from .views import chunkUploadedFile
 from .crypto import aes
 
@@ -210,9 +210,9 @@ class JSONField(models.TextField):
         if value is None:
             return value
         if isinstance(value, str):
-            value = UberDict.fromJSON(value)
+            value = objict.fromJSON(value)
         elif isinstance(value, dict) and not hasattr(value, "fromdict"):
-            value = UberDict.fromdict(value)
+            value = objict.fromdict(value)
         return value
 
     def from_db_value(self, value, expression, connection, *args, **kwargs):
@@ -227,7 +227,7 @@ class JSONField(models.TextField):
             return value
         if isinstance(value, dict):
             if not hasattr(value, "toJSON"):
-                value = UberDict.fromdict(value)
+                value = objict.fromdict(value)
             return value.toJSON(as_string=True)
         return value
 

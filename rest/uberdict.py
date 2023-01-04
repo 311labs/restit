@@ -176,6 +176,26 @@ class UberDict(dict):
         except KeyError:
             return default
 
+    def sort(self, by_value=False, reverse=False):
+        if by_value:
+            return self.sortByValue(reverse=reverse)
+        keys = list(self.sortKeys(reverse=reverse))
+        old = self.copy()
+        self.clear()
+        for key in keys:
+            self[key] = old[key]
+        return self
+
+    def sortByValue(self, reverse=False):
+        marklist = sorted(self.items(), key=lambda x:x[1], reverse=reverse)
+        self.clear()
+        for key, value in marklist:
+            self[key] = value
+        return self
+
+    def sortKeys(self, reverse=False):
+        return sorted(self.keys(), reverse=reverse)
+
     def find(self, key, default=None, data=None):
         # this will search the dict for the first key it finds that matches this
         if data is None:
@@ -317,7 +337,7 @@ class UberDict(dict):
             return cls.fromdict(json.loads(text))
         try:
             return cls.fromdict(json.loads(text))
-        except Exception as err:
+        except Exception:
             pass
         return cls()
 
