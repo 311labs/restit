@@ -435,7 +435,7 @@ class R(object):
         # Build the set of Redis keys that we need to get.
         keys = []
         for slug in slugs:
-            for date in utils.daterange(granularity, since, to):
+            for date in utils.date_range(granularity, since, to):
                 keys += utils.build_keys(slug, date, granularity)
         keys = list(dedupe(keys))
 

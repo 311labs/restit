@@ -1,5 +1,5 @@
 from rest import settings
-from django.template.defaultfilters import slugify
+from django.template.defaultfilters import slugify as django_slugify
 from collections import OrderedDict
 from datetime import datetime, timedelta
 
@@ -129,6 +129,10 @@ def build_key_patterns(slug, date, min_granularity=None):
     for g in granularities(min_granularity=min_granularity):
         patts[g] = get_metric_key_pattern(g, slug, date)
     return patts
+
+
+def slugify(slug):
+    return slug.replace(" ", "_").replace(":", "|").lower()
 
 
 def build_keys(slug, date=None, granularity='all', min_granularity=None):

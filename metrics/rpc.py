@@ -4,6 +4,7 @@ from rest import views as rv
 from rest import settings
 from location.models import GeoIP
 from . import client as metrics
+from . import models as mm
 
 """
 Capture simple analytics counters.
@@ -11,7 +12,7 @@ Capture simple analytics counters.
 LOCATION_METRICS = settings.LOCATION_METRICS
 
 
-@rd.urlPOST(r'^metric$')
+@rd.urlPOST('metric')
 def rest_on_new_metric(request):
     # slug, num=1, category=None, expire=None, date=None
     data = request.DATA.toObject()
@@ -32,7 +33,7 @@ def rest_on_new_metric(request):
     return rv.restStatus(request, True)
 
 
-@rd.urlGET(r'^metric$')
+@rd.urlGET('metric')
 def rest_on_get_metric(request):
     # slug, num=1, category=None, expire=None, date=None
     data = request.DATA.toObject()
@@ -44,7 +45,7 @@ def rest_on_get_metric(request):
     return rv.restReturn(request, dict(data=result))
 
 
-@rd.urlGET(r'^metrics$')
+@rd.urlGET('metrics')
 def rest_on_get_metrics(request, pk=None):
     # slug, since, granularity
     since = request.DATA.get("since", field_type=datetime)
@@ -63,7 +64,7 @@ def rest_on_get_metrics(request, pk=None):
     return rv.restReturn(request, dict(data=result))
 
 
-@rd.urlGET(r'^slugs$')
+@rd.urlGET('slugs')
 def rest_on_get_metrics_slugs(request, pk=None):
     category = request.DATA.get("category", None)
     slugs = metrics.get_slugs(category)
@@ -73,7 +74,7 @@ def rest_on_get_metrics_slugs(request, pk=None):
     return rv.restReturn(request, dict(data=slugs))
 
 
-@rd.urlPOST(r'^guage$')
+@rd.urlPOST('guage')
 def rest_on_guage(request, pk=None):
     data = request.DATA.toObject()
     if data.slug is None or data.value is None:
@@ -82,7 +83,7 @@ def rest_on_guage(request, pk=None):
     return rv.restStatus(request, True)
 
 
-@rd.urlGET(r'^guage$')
+@rd.urlGET('guage')
 def rest_on_get_guage(request):
     # slug, num=1, category=None, expire=None, date=None
     data = request.DATA.toObject()
@@ -91,7 +92,7 @@ def rest_on_get_guage(request):
     return rv.restReturn(request, metrics.get_guage(data.slug))
 
 
-@rd.urlGET(r'^guages$')
+@rd.urlGET('guages')
 def rest_on_get_guages(request, pk=None):
     # slug, num=1, category=None, expire=None, date=None
     data = request.DATA.toObject()
@@ -99,4 +100,27 @@ def rest_on_get_guages(request, pk=None):
         return rv.restStatus(request, False)
     return rv.restReturn(request, metrics.get_guages(data.slugs))
 
+
+@rd.urlGET('db/metrics')
+def rest_on_get_model_metrics(request, pk=None):
+    # slug, since, granularity
+    since = request.DATA.get("since", field_type=datetime)
+    granularity = request.DATA.get(["granularity", "period"], default="daily")
+    category = request.DATA.get("category")
+    if category:
+        result = mm.get_category_metrics(category, since, granularity)
+        return rv.restReturn(request, dict(data=result))
+    slugs = request.DATA.get(["slug", "slugs"])
+    if slugs is None:
+        return rv.restStatus(request, False)
+
+    result = mm.get_metrics(slugs, granularity, since, group=request.group)
+    if result is None:
+        return rv.restStatus(request, False)
+    return rv.restReturn(request, dict(data=result))
+
+
+@rd.urlGET('db/slugs')
+def rest_on_get_model_metrics_slugs(request, pk=None):
+    return rv.restGet(request, dict(data=list(mm.Metrics.objects.all().distinct().values_list("slug", flat=True))))
 

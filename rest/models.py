@@ -1202,7 +1202,7 @@ class RestModel(object):
             qset = cls.on_rest_filter_children(request, qset)
         else:
             all_perms = getattr(cls.RestMeta, "VIEW_PERMS", None)
-            if all_perms:
+            if request.member and all_perms:
                 if not request.member.hasPerm(all_perms):
                     return cls.on_rest_filter_member_field(request, qset)
         return qset

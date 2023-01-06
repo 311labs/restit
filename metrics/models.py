@@ -17,6 +17,7 @@ def metric(slug, keys, data, min_granularity="hourly", group=None, date=None):
         date = utils.datetime.utcnow()
     uuids = utils.build_keys(uuid_key, date, min_granularity=min_granularity)
     for granularity, key in zip(granularities, uuids):
+        # DO not change slug to uuid_key so we can filter by group using group field
         m, created = Metrics.objects.get_or_create(
             uuid=key, 
             defaults=dict(
@@ -43,7 +44,7 @@ def get_totals(slug, keys, granularity, start, end=None, group=None):
     return objict(slug=slug, granularity=granularity, start=start, end=end, values=out)
 
 
-def get_metrics(slug, keys, granularity, start, end=None, group=None):
+def get_metrics(slug, granularity, start, end=None, group=None):
     """
     returns data ready for Chart.js
     'periods': ['y:2012', 'y:2013', 'y:2014']
@@ -58,16 +59,24 @@ def get_metrics(slug, keys, granularity, start, end=None, group=None):
       },
     ]
     """
+    if start is None:
+        start = utils.datetime.utcnow() - utils.timedelta(days=7)
     start = utils.date_for_granulatiry(start, granularity)
     if end is None:
         end = utils.datetime.utcnow()
     end = utils.date_for_granulatiry(end, granularity)
     qset = Metrics.objects.filter(
-        slug=slug, granularity=granularity,
-        group=group, start__gte=start, start__lte=end)
+        slug=slug, granularity=granularity, start__gte=start, start__lte=end)
+    if group != None:
+        qset = qset.filter(group=group)
     raw_metrics = dict()
+    keys = None
     for obj in qset:
-        raw_metrics[utils.strip_metric_prefix(obj.uuid)] = obj.getMetrics()
+        values = obj.getMetrics()
+        if keys is None:
+            keys = values.keys()
+        raw_metrics[utils.strip_metric_prefix(obj.uuid)] = values
+    rh.log_error("raw_metrics", qset.count(), raw_metrics, granularity, group)
     periods = []
     data = dict()
     for k in keys:
@@ -87,9 +96,18 @@ def get_metrics(slug, keys, granularity, start, end=None, group=None):
     return objict(periods=periods, data=data)
 
 
+def get_category_metrics(category, since=None, granularity="daily"):
+    """Create/Increment a metric."""
+    # r = get_r()
+    # slugs = [utils.to_string(s) for s in list(r.category_slugs(category))]
+    # print(slugs)
+    # return r.get_metric_history_chart_data(slugs, since, granularity)
+    return None
+
+
 def generate_uuid(slug, group):
     if group is not None:
-        return f"{slug}__{group.pk}"
+        return f"{slug}.{group.pk}"
     return slug
 
 
@@ -178,4 +196,3 @@ class Metrics(models.Model, rm.RestModel):
             if update_keys:
                 params[f"k{index}"] = key
         Metrics.objects.filter(pk=self.pk).update(**params)
-
