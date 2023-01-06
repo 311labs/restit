@@ -1,8 +1,10 @@
 from django.db import models
 
 from rest import models as rm
+from rest.extra import JSONMetaData
 from rest import log
 from rest import settings
+
 import metrics
 
 from datetime import datetime, timedelta
@@ -31,21 +33,19 @@ external system can post an event
 """
 
 
-class Event(models.Model, rm.RestModel, rm.MetaDataModel):
+class Event(rm.RestModel, JSONMetaData):
     class RestMeta:
         POST_SAVE_FIELDS = ["level", "catagory"]
         SEARCH_FIELDS = ["description", "hostname"]
         # VIEW_PERMS = ["example_permission"]
         GRAPHS = {
             "default": {
-                "extra": ["metadata"],
                 "graphs": {
                     "group": "basic",
                     "created_by": "basic"
                 },
             },
             "detailed": {
-                "extra": ["metadata"],
                 "graphs": {
                     "group": "basic",
                     "created_by": "basic",
@@ -77,6 +77,11 @@ class Event(models.Model, rm.RestModel, rm.MetaDataModel):
             if rule.run(self):
                 return rule
         return None
+
+    def set_description(self, value):
+        # trun desc to 84
+        if len(value) > 84:
+            value = value[:80] + "..."
 
     def on_rest_saved(self, request, is_new=False):
         if INCIDENT_EVENT_METRICS:
@@ -128,6 +133,4 @@ class Event(models.Model, rm.RestModel, rm.MetaDataModel):
             incident.on_rest_saved(request, is_new=is_incident_new)
         
 
-class EventMetaData(rm.MetaDataBase):
-    parent = models.ForeignKey(Event, related_name="properties", on_delete=models.CASCADE)
 

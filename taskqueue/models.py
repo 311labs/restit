@@ -1,5 +1,5 @@
 from django.db import models
-from django.conf import settings
+from rest import settings
 
 from rest.models import RestModel, MetaDataModel, MetaDataBase
 from rest.fields import JSONField

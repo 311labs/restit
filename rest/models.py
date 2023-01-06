@@ -1211,7 +1211,7 @@ class RestModel(object):
     def on_rest_filter_children(cls, request, qset=None):
         # rest_helpers.log_error("filter by group?")
         group_field = getattr(cls.RestMeta, "GROUP_FIELD", "group")
-        if group_field is None:
+        if group_field is None or ("__" not in group_field and not cls.has_model_field_name(group_field)):
             return qset
         parent_kinds = getattr(cls.RestMeta, "LIST_PARENT_KINDS", ["org"])
         if request.DATA.get("child_groups") or request.group.kind in parent_kinds:
@@ -1827,6 +1827,13 @@ class RestModel(object):
     @classmethod
     def get_model_field_names(cls):
         return [f.name for f in cls._meta.fields]
+
+    @classmethod
+    def has_model_field_name(cls, name):
+        for f in cls._meta.fields:
+            if f.name == name:
+                return True
+        return False
 
     @classmethod
     def get_field_type(cls, fieldname):
