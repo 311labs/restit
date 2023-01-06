@@ -295,6 +295,12 @@ class Member(User, RestModel, MetaDataModel):
                 self.last_activity = self.last_login
                 is_dirty = True
         if is_dirty:
+            # update the current device if one exists
+            request = self.getActiveRequest()
+            if request is not None and request.device_id:
+                device = self.devices.filter(uuid=request.device_id).last()
+                if device is not None:
+                    device.touch()
             self.save()
 
     def addPermission(self, perm):
@@ -526,6 +532,15 @@ class Member(User, RestModel, MetaDataModel):
         #         qset = qset.filter(created__lte=age)
         #     for slog in qset:
         #         slog.logout()
+
+    def notifyMobile(self, data=None, title=None, body=None):
+        for device in self.devices.filter(cm_provider="fcm"):
+            if device.cm_token is None:
+                continue
+            if data is not None:
+                device.sendData(data)
+            else:
+                device.sendNotification(title, body)
 
     def notify(self, template=None, context=None, subject=None, message=None, email_only=True, sms_msg=None, force=False, from_email=settings.DEFAULT_FROM_EMAIL):
         from telephony.models import SMS

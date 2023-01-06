@@ -1455,7 +1455,7 @@ class RestModel(object):
                     uname = str(request.auth_model)
                     request.auth_model.auditLog(error, action="error", level=8)
                 error = F"{uname} permission denied to create {cls.__name__}"
-                raise PermisionDeniedException(error, code)
+                raise PermisionDeniedException(error, 435)
         can_create = getattr(cls.RestMeta, "CAN_CREATE", True)
         if not can_create:
             return GRAPH_HELPERS.restStatus(request, False, error="creation not allowed via rest for this model.")
