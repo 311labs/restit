@@ -213,10 +213,13 @@ class Task(models.Model, RestModel):
             "channel": self.channel,
             "handler": handler
         }
-        import incident
-        incident.event(
-            "taskqueue_errors", description=subject, details=msg, 
-            level=3, metadata=metadata)
+        try:
+            import incident
+            incident.event_now(
+                "taskqueue_errors", description=subject, details=msg, 
+                level=3, metadata=metadata)
+        except Exception as err:
+            self.log(str(err), kind="error")
 
     def cancel(self, reason=None):
         self.cancel_requested = True
