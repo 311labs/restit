@@ -1,5 +1,4 @@
 from objict import objict
-from .models import Event
 
 
 def event(category, description, level=10, **kwargs):
@@ -10,6 +9,7 @@ def event(category, description, level=10, **kwargs):
 
 
 def event_now(category, description, level=10, **kwargs):
+    from .models.event import Event
     data = objict(category=category, description=description, level=level)
     data.update(kwargs)
     Event.createFromDict(None, data)
