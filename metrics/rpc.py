@@ -120,6 +120,21 @@ def rest_on_get_model_metrics(request, pk=None):
     return rv.restReturn(request, dict(data=result))
 
 
+@rd.urlGET('db/metric')
+def rest_on_get_model_metric(request, pk=None):
+    # slug, since, granularity
+    since = request.DATA.get("since", field_type=datetime)
+    granularity = request.DATA.get(["granularity", "period"], default="daily")
+    slugs = request.DATA.get(["slug", "slugs"])
+    if slugs is None:
+        return rv.restStatus(request, False)
+
+    result = mm.get_metric(slugs, granularity, since, group=request.group)
+    if result is None:
+        return rv.restStatus(request, False)
+    return rv.restReturn(request, dict(data=result))
+
+
 @rd.urlGET('db/slugs')
 def rest_on_get_model_metrics_slugs(request, pk=None):
     return rv.restGet(request, dict(data=list(mm.Metrics.objects.all().distinct().values_list("slug", flat=True))))

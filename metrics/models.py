@@ -27,6 +27,8 @@ def metric(slug, keys, data, min_granularity="hourly", group=None, date=None):
 
 
 def get_totals(slug, keys, granularity, start, end=None, group=None):
+    if start is None:
+        start = utils.datetime.utcnow()
     start = utils.date_for_granulatiry(start, granularity)
     if end is None:
         end = utils.datetime.utcnow()
@@ -42,6 +44,17 @@ def get_totals(slug, keys, granularity, start, end=None, group=None):
         out[k] = sums[f"v{i}"]
         i += 1
     return objict(slug=slug, granularity=granularity, start=start, end=end, values=out)
+
+
+def get_metric(slug, granularity, start, group=None):
+    if start is None:
+        start = utils.datetime.utcnow()
+    start = utils.date_for_granulatiry(start, granularity)
+    m = Metrics.objects.filter(
+        slug=slug, granularity=granularity, start__gte=start, start__lte=start).last()
+    if m is None:
+        return objict()
+    return m.getMetrics()
 
 
 def get_metrics(slug, granularity, start, end=None, group=None):
@@ -60,14 +73,21 @@ def get_metrics(slug, granularity, start, end=None, group=None):
     ]
     """
     if start is None:
-        start = utils.datetime.utcnow() - utils.timedelta(days=7)
+        if granularity == "hourly":
+            start = utils.datetime.utcnow() - utils.timedelta(hours=12)
+        elif granularity == "daily":
+            start = utils.datetime.utcnow() - utils.timedelta(days=7)
+        elif granularity == "weekly":
+            start = utils.datetime.utcnow() - utils.timedelta(days=31)
+        elif granularity == "monthly":
+            start = utils.datetime.utcnow() - utils.timedelta(days=210)
     start = utils.date_for_granulatiry(start, granularity)
     if end is None:
         end = utils.datetime.utcnow()
     end = utils.date_for_granulatiry(end, granularity)
     qset = Metrics.objects.filter(
         slug=slug, granularity=granularity, start__gte=start, start__lte=end)
-    if group != None:
+    if group is not None:
         qset = qset.filter(group=group)
     raw_metrics = dict()
     keys = None

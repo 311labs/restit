@@ -164,6 +164,7 @@ class MetaDataBase(models.Model):
             return "{}.{}={}".format(self.category, self.key, self.value)
         return "{}={}".format(self.key, self.value)
 
+
 class MetaDataModel(object):
     def set_metadata(self, request, values=None):
         # this may get called before the model is saved

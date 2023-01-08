@@ -222,8 +222,20 @@ def date_range(granularity, since, to=None):
         granularity = "hours"
         units = elapsed.total_seconds() / 3600
         units = 720 if units > 720 else units
-    else:
+    elif granularity == "daily":
         granularity = "days"
         units = elapsed.days + 1
+    elif granularity == "monthly":
+        granularity = "days"
+        months = diff_month(to, since)
+        output = []
+        for i in range(months):
+            output.append(to.replace(day=1, hour=0, minute=0, second=0, microsecond=0))
+            to -= timedelta(days=31)
+        return output
 
     return (to - timedelta(**{granularity: u}) for u in range(int(units)))
+
+
+def diff_month(d1, d2):
+    return (d1.year - d2.year) * 12 + d1.month - d2.month
