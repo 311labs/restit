@@ -72,7 +72,7 @@ class JSONEncoderExt(json.JSONEncoder):
             if math.isnan(obj):
                 return 0.0
         elif isinstance(obj, set):
-            helpers.log_error(obj)
+            # helpers.log_error(obj)
             return str(obj)
         elif isinstance(obj, bytes):
             return util.toString(obj)
@@ -598,7 +598,7 @@ def restGet(request, qset, model=None, fields=None, extra=[], exclude=[], fkey_d
         if isinstance(data, dict) and hasattr(data, "asDict"):
             data = data.asDict()
         elif hasattr(data, '__func__'):
-            helpers.log_error("__func__", repr(f), repr(type(data)), repr(data))
+            # helpers.log_error("__func__", repr(f), repr(type(data)), repr(data))
             data = __call_func(data, *fargs, request=orig_request, obj__self=qset, **orig_objs)
         elif f.startswith("get_") and f.endswith("_display") and callable(data):
             data = data()
