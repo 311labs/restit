@@ -767,7 +767,8 @@ def _order_list(ordering, data, dir, clear=False):
 def restListOther(request, qset, size=25, start=0, sort=None, accept_list=None, return_httpresponse=True):
 
     if request:
-        sort = request.DATA.get("sort", sort)
+        if sort is None:
+            sort = request.DATA.get("sort", sort)
         size = request.DATA.get(['size', '_size'], size, field_type=int)
         start = request.DATA.get(['start', '_start'], start, field_type=int)
 
@@ -848,7 +849,8 @@ def restList(request, qset, model=None, size=25, start=0, sort=None, fields=None
         # values from request
         size = request.DATA.get(['size', '_size'], size, field_type=int)
         start = request.DATA.get(['start', '_start'], start, field_type=int)
-        sort = request.DATA.get('sort', sort)
+        if sort is None:
+            sort = request.DATA.get('sort', sort)
 
     count = 0
     if get_count:
