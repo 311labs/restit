@@ -50,12 +50,13 @@ class GlobalRequestMiddleware(object):
         return rtype
 
     def process_exception(self, request, exception):
-        helpers.log_exception("process_exception")
         try:
             rtype = self._getReturnType(request)
             payload = UberDict(error=str(exception) or getattr(type(exception), '__name__'), status=500)
             if type(exception) == http.Http404:
                 payload.status = 404
+            else:
+                helpers.log_exception("process_exception")
             return http.HttpResponse(payload.toJSON(), status=200, content_type=rtype)
         except Exception:
             helpers.log_exception("another exception")
