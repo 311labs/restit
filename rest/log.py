@@ -161,6 +161,8 @@ class RestLoggerStream(object):
                         self.filename = os.path.join(VAR_FOLDER, filename)
         self.max_bytes = max_bytes
         self.stream = None
+        self.is_stdout = False
+        self.is_stderr = False
         self.lock = threading.RLock()
         self.open()
 
@@ -259,6 +261,10 @@ class RestLoggerStream(object):
         self.stream = open(self.filename, "w")
         self.stream.write(to_end)
         self.stream.flush()
+        if self.is_stderr:
+            self.capture_stderr()
+        if self.is_stdout:
+            self.capture_stdout()
 
     def rotateCheck(self):
         if self.is_file and self.max_bytes > 0:  # are we rolling over?
@@ -267,6 +273,14 @@ class RestLoggerStream(object):
             if self.size() >= self.max_bytes:
                 return True
         return False
+
+    def capture_stdout(self):
+        self.is_stdout = True
+        sys.stdout = self.stream
+
+    def capture_stderr(self):
+        self.is_stderr = True
+        sys.stderr = self.stream
 
 
 class RestLogger(object):
