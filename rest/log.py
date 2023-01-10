@@ -16,8 +16,9 @@ import traceback
 
 COLOR_LOGS = True
 MAX_LOG_SIZE = 10485760
+
 # number of bytes to leave after rotating/truncating a file
-ROTATE_LEFT_OVER_BYTES = 3000
+ROTATE_LEFT_OVER_BYTES = 50000
 LOG_COUNT = 3
 
 REST_FOLDER = os.path.realpath(__file__)
@@ -688,4 +689,20 @@ def mkdir(path):
             pass
         else:
             raise
+
+
+def pruneFile(path, bytes_remaining=ROTATE_LEFT_OVER_BYTES):
+    with open(path, "r") as stream:
+        try:
+            stream.seek(0, 2)
+            size = stream.tell()
+            # now lets go back X bytes and find first new line
+            stream.seek(size - bytes_remaining)
+            stream.readline()
+            to_end = stream.read()
+        except Exception:
+            pass
+    with open(path, "w") as stream:
+        stream.write(to_end)
+        stream.flush()
 
