@@ -241,8 +241,10 @@ class RestLoggerStream(object):
         # simple way lets open the file for writing
         # read the last
         # reopen file for reading and writing
-        print(("file size is: {}".format(self.size())))
-        self.stream.close()
+        try:
+            self.stream.close()
+        except Exception:
+            pass
         to_end = ""
         with open(self.filename, "r") as stream:
             try:
