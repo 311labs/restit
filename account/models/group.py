@@ -422,10 +422,10 @@ class Group(models.Model, RestModel, MetaDataModel):
         if credentials.kind == "member":
             rest_helpers.log_error(msg)
             if msg.pk is not None:
-                if credentials.member.hasPermission("view_all_groups") or credentials.member.isMemberOf(msg.pk):
+                if credentials.instance.hasPermission("view_all_groups") or credentials.member.isMemberOf(msg.pk):
                     return [msg.pk]
                 return None
-            return credentials.member.getGroupIDs()
+            return credentials.instance.getGroupIDs()
         return None
 
     @classmethod
@@ -435,7 +435,7 @@ class Group(models.Model, RestModel, MetaDataModel):
         # this should return true or false
         if credentials.kind == "member":
             if msg.pk is not None:
-                return credentials.member.isMemberOf(msg.pk)
+                return credentials.instance.isMemberOf(msg.pk)
         return False         
 
 

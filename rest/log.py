@@ -32,6 +32,7 @@ while ROOT is None:
         CUR_FOLDER = os.path.dirname(CUR_FOLDER)
 
 VAR_FOLDER = os.path.join(ROOT, "var", "logs")
+PATH = VAR_FOLDER
 
 
 class RestLogManager(object):
