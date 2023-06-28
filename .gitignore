@@ -21,3 +21,4 @@ sqlite*.db
 dump.rdb
 docs_site/
 .hypothesis
+/dist/
